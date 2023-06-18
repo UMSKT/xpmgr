@@ -6,6 +6,8 @@
 #include <commctrl.h>
 #include <stdint.h>
 #include <intrin.h>
+#include <algorithm>
+#include <atlconv.h>
 #include <iostream>
 #include <comutil.h>
 
@@ -141,6 +143,51 @@ static BOOL LoadLicenseManager()
 	return TRUE;
 }
 
+static BSTR GetWPALeft() {
+	if (!LoadLicenseManager()) {
+		return SysAllocString(L"Failed to load license manager");
+	}
+
+	ULONG dwWPALeft = 0, dwEvalLeft = 0;
+	HRESULT status = LicenseAgent->GetExpirationInfo(&dwWPALeft, &dwEvalLeft);
+	if (FAILED(status)) {
+		std::cout << "An error occurred at GetExpirationInfo: " + status;
+		LicenseAgent->Release();
+		LicenseAgent = NULL;
+		return SysAllocString(L"Failed to get expiration info");
+	}
+	if (dwWPALeft == 0x7FFFFFFF) {
+		std::cout << "An error occurred: dwWPALeft is 0x7FFFFFFF";
+		LicenseAgent->Release();
+		LicenseAgent = NULL;
+		return SysAllocString(L"Failed to get expiration info");
+	}
+
+	return SysAllocString(_bstr_t(dwWPALeft).Detach());
+}
+
+static BSTR GetEvalLeft() {
+	if (!LoadLicenseManager()) {
+		return SysAllocString(L"Failed to load license manager");
+	}
+
+	ULONG dwWPALeft = 0, dwEvalLeft = 0;
+	HRESULT status = LicenseAgent->GetExpirationInfo(&dwWPALeft, &dwEvalLeft);
+	if (FAILED(status)) {
+		std::cout << "An error occurred at GetExpirationInfo: " + status;
+		LicenseAgent->Release();
+		LicenseAgent = NULL;
+		return SysAllocString(L"Failed to get expiration info");
+	}
+	if (dwWPALeft == 0x7FFFFFFF) {
+		std::cout << "An error occurred: dwWPALeft is 0x7FFFFFFF";
+		LicenseAgent->Release();
+		LicenseAgent = NULL;
+		return SysAllocString(L"Failed to get expiration info");
+	}
+	return SysAllocString(_bstr_t(dwEvalLeft).Detach());
+}
+
 static BSTR SetConfirmationID(BSTR confirmationID) {
 	if (!LoadLicenseManager()) {
 		return SysAllocString(L"Failed to load license manager");
@@ -210,25 +257,50 @@ wchar_t* convertCharArrayToLPCWSTR(const char* charArray)
 	return wString;
 }
 
+char* getCmdOption(char** begin, char** end, const std::string& option)
+{
+	char** itr = std::find(begin, end, option);
+	if (itr != end && ++itr != end)
+	{
+		return *itr;
+	}
+	return 0;
+}
+
+bool cmdOptionExists(char** begin, char** end, const std::string& option)
+{
+	return std::find(begin, end, option) != end;
+}
+
 int main(int argc, char* argv[])
 {
-	if (std::string(argv[1]) == "--GetInstallationID") {
+	if (cmdOptionExists(argv, argv+argc, "--GetInstallationID")) {
 		std::cout << _com_util::ConvertBSTRToString(GetInstallationID());
 		return 0;
 	}
-	else if (std::string(argv[1]) == "--SetConfirmationID") {
-		std::cout << _com_util::ConvertBSTRToString(SetConfirmationID(_com_util::ConvertStringToBSTR(argv[2])));
+	else if (cmdOptionExists(argv, argv + argc, "--SetConfirmationID")) {
+		std::cout << _com_util::ConvertBSTRToString(SetConfirmationID(_com_util::ConvertStringToBSTR(getCmdOption(argv, argv+argc, "--SetConfirmationID"))));
 		return 0;
 	}
-	else if (std::string(argv[1]) == "--SetProductKey") {
-		std::cout << _com_util::ConvertBSTRToString(SetProductKey(convertCharArrayToLPCWSTR(argv[2])));
+	else if (cmdOptionExists(argv, argv + argc, "--SetProductKey")) {
+		std::cout << _com_util::ConvertBSTRToString(SetProductKey(convertCharArrayToLPCWSTR(getCmdOption(argv, argv + argc, "--SetProductKey"))));
 		return 0;
 	}
-	else if (std::string(argv[1]) == "--GetProductID") {
+	else if (cmdOptionExists(argv, argv + argc, "--GetProductID")) {
 		std::cout << _com_util::ConvertBSTRToString(GetProductID());
+		return 0;
+	}
+	else if (cmdOptionExists(argv, argv + argc, "--GetWPALeft")) {
+		std::cout << _com_util::ConvertBSTRToString(GetWPALeft());
+		return 0;
+	}
+	else if (cmdOptionExists(argv, argv + argc, "--GetEvalLeft")) {
+		std::cout << _com_util::ConvertBSTRToString(GetEvalLeft());
+		return 0;
 	}
 	else {
 		std::cout << "Please put in arguments";
 		return 0;
 	}
+	return 0;
 }
