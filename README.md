@@ -12,6 +12,9 @@ Command line interface for Windows XP license management, inspired by Microsoft'
 
 Make sure you do commands right, since, as of now, there's no checking to make sure it's correct or not!
 
+## Releases
+https://github.com/UMSKT/xpmgr/releases
+
 ## Building
 Due to GitHub not wanting to cooperate with auto-building for Windows XP (who would have thought?), you need to build it yourself.
 
