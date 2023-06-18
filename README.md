@@ -11,3 +11,8 @@ Command line interface for Windows XP license management, inspired by Microsoft'
 `--SetConfirmationID`: Sets a Confirmation ID (tested to work with dashes).
 
 Make sure you do commands right, since, as of now, there's no checking to make sure it's correct or not!
+
+## Building
+Due to GitHub not wanting to cooperate with auto-building for Windows XP (who would have thought?), you need to build it yourself.
+
+Make sure Visual Studio 2017 or later is installed, with the v141_xp toolchain. Then, `git clone`, open in VS, build, done.
