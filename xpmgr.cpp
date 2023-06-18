@@ -12,6 +12,9 @@
 #pragma comment(lib, "comsuppw.lib")
 #pragma comment(lib, "kernel32.lib")
 
+// The magic numbers, interface, and LoadLicenseManager() function was made by diamondggg on MyDigitalLife.
+// LoadLicenseManager() was modified to suit a CLI rather than a GUI.
+// Everything else was made by TheTank20.
 static wchar_t strings[14][256];
 
 static CLSID licdllCLSID = { 0xACADF079, 0xCBCD, 0x4032, {0x83, 0xF2, 0xFA, 0x47, 0xC4, 0xDB, 0x09, 0x6F} };
