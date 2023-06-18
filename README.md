@@ -10,6 +10,10 @@ Command line interface for Windows XP license management, inspired by Microsoft'
 
 `--SetConfirmationID`: Sets a Confirmation ID (tested to work with dashes).
 
+`--GetWPALeft`: Gets the number of days before activation is required, in days.
+
+`--GetEvalLeft`: Gets the number of days before the evaluation period expires, in days. In most cases, this should be 2147483647.
+
 Make sure you do commands right, since, as of now, there's no checking to make sure it's correct or not!
 
 ## Releases
