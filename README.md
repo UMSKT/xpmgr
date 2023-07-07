@@ -12,15 +12,17 @@ If you have Windows XP Professional x64 Edition or an x64 version of Windows Ser
 
 `--GetProductID`: Gets the product ID (ex: `76477-755-3803223-21229`).
 
-`--SetProductKey`: Sets the product key (tested to work with dashes).
+`--SetProductKey`: Sets the product key (tested to work with dashes). If successfully activated, this should give an error instead.
 
-`--GetInstallationID`: Gets an Installation ID with **no dashes** (ex: `253286028742154311079061239762245184619981623171292574`). 
+`--GetInstallationID`: Gets an Installation ID with **no dashes** (ex: `253286028742154311079061239762245184619981623171292574`). If successfully activated, this should give an error instead.
 
-`--SetConfirmationID`: Sets a Confirmation ID (tested to work with dashes).
+`--SetConfirmationID`: Sets a Confirmation ID (tested to work with dashes). If successfully activated, this should give an error instead.
 
-`--GetWPALeft`: Gets the number of days before activation is required, in days. If successfully activated, this should be 2147483647.
+`--GetWPALeft`: Gets the number of days before activation is required, in days. If successfully activated, this should give an error instead.
 
-`--GetEvalLeft`: Gets the number of days before the evaluation period expires, in days. In most cases, this should be 2147483647.
+`--GetEvalLeft`: Gets the number of days before the evaluation period expires, in days. In non-evaluation copies of Windows, this should give an error instead.
+
+`--GetUsage`: Outputs all the commands you can use.
 
 Make sure you do commands right, since, as of now, there's no checking to make sure it's correct or not!
 
