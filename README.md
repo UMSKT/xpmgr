@@ -8,7 +8,9 @@ In most cases, you'll need `xpmgr_x86.exe`.
 
 If you have Windows XP Professional x64 Edition or an x64 version of Windows Server 2003, you need `xpmgr_x64.exe`.
 
-*If you have an Itanium edition of XP or Server 2003, or a version of XP/Server 2003 we don't even know about, we unfortunately don't have a build for you. We can use your help to make one, though! Contact us at https://umskt.zulipchat.com.*
+If you have an Itanium version of Windows XP or Server 2003, Windows Product Activation is not on those editions, so there is no need for this tool.
+
+In general, don't use `xpmgr_debug_[arch].exe` unless you have a reason why.
 
 `--GetProductID`: Gets the product ID (ex: `76477-755-3803223-21229`).
 
