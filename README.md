@@ -10,6 +10,8 @@ If you have Windows XP Professional x64 Edition or an x64 version of Windows Ser
 
 *If you have an Itanium edition of XP or Server 2003, or a version of XP/Server 2003 we don't even know about, we unfortunately don't have a build for you. We can use your help to make one, though! Contact us at https://umskt.zulipchat.com.*
 
+In general, don't use `xpmgr_debug_[arch].exe` unless you have a reason why.
+
 `--GetProductID`: Gets the product ID (ex: `76477-755-3803223-21229`).
 
 `--SetProductKey`: Sets the product key (tested to work with dashes).
