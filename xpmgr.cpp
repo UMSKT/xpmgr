@@ -14,9 +14,18 @@
 #pragma comment(lib, "comsuppw.lib")
 #pragma comment(lib, "kernel32.lib")
 
+// Check windows
+#if _WIN32 || _WIN64
+#if _WIN64
+#define ENVIRONMENT64
+#else
+#define ENVIRONMENT32
+#endif
+#endif
+
 // The magic numbers, interface, and LoadLicenseManager() function was made by diamondggg on MyDigitalLife.
 // LoadLicenseManager() was modified to suit a CLI rather than a GUI.
-// Everything else was made by TheTank20 and copy pasted from StackOverflow.
+// Everything else was either made by TheTank20 or copy pasted from StackOverflow.
 static wchar_t strings[14][256];
 
 static CLSID licdllCLSID = { 0xACADF079, 0xCBCD, 0x4032, {0x83, 0xF2, 0xFA, 0x47, 0xC4, 0xDB, 0x09, 0x6F} };
@@ -134,12 +143,6 @@ static BOOL LoadLicenseManager()
 		LicenseAgent = NULL;
 		return FALSE;
 	}
-	if (dwWPALeft == 0x7FFFFFFF) {
-		std::cout << "An error occurred: dwWPALeft is 0x7FFFFFFF";
-		LicenseAgent->Release();
-		LicenseAgent = NULL;
-		return FALSE;
-	}
 	return TRUE;
 }
 
@@ -152,12 +155,6 @@ static BSTR GetWPALeft() {
 	HRESULT status = LicenseAgent->GetExpirationInfo(&dwWPALeft, &dwEvalLeft);
 	if (FAILED(status)) {
 		std::cout << "An error occurred at GetExpirationInfo: " + status;
-		LicenseAgent->Release();
-		LicenseAgent = NULL;
-		return SysAllocString(L"Failed to get expiration info");
-	}
-	if (dwWPALeft == 0x7FFFFFFF) {
-		std::cout << "An error occurred: dwWPALeft is 0x7FFFFFFF";
 		LicenseAgent->Release();
 		LicenseAgent = NULL;
 		return SysAllocString(L"Failed to get expiration info");
@@ -179,12 +176,7 @@ static BSTR GetEvalLeft() {
 		LicenseAgent = NULL;
 		return SysAllocString(L"Failed to get expiration info");
 	}
-	if (dwWPALeft == 0x7FFFFFFF) {
-		std::cout << "An error occurred: dwWPALeft is 0x7FFFFFFF";
-		LicenseAgent->Release();
-		LicenseAgent = NULL;
-		return SysAllocString(L"Failed to get expiration info");
-	}
+
 	return SysAllocString(_bstr_t(dwEvalLeft).Detach());
 }
 
@@ -274,6 +266,20 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 
 int main(int argc, char* argv[])
 {
+	SYSTEM_INFO systemInfo;
+	GetNativeSystemInfo(&systemInfo);
+#ifdef ENVIRONMENT32
+	if (systemInfo.wProcessorArchitecture != PROCESSOR_ARCHITECTURE_INTEL) { // running under WOW64
+		if (systemInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) { // is AMD64
+			std::cout << "An error occurred: Incorrect version of xpmgr. You need to download the x64 version.";
+		}
+		else { // is IA64, PPC, megafart 386, whatever else
+			std::cout << "An error occurred: Incorrect version of xpmgr. Go to https://umskt.zulipchat.com if you want to help us make a version for your platform!";
+		}
+		return 0;
+	}
+#endif
+
 	if (cmdOptionExists(argv, argv+argc, "--GetInstallationID")) {
 		std::cout << _com_util::ConvertBSTRToString(GetInstallationID());
 		return 0;
