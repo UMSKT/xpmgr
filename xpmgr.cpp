@@ -1,19 +1,9 @@
-#define STRICT
-#define UNICODE
-#define _UNICODE
+
 
 #include <windows.h>
-#include <commctrl.h>
-#include <stdint.h>
-#include <intrin.h>
-#include <algorithm>
-#include <atlconv.h>
 #include <iostream>
 #include <comutil.h>
-#include <cstdlib>
 #include <regex>
-#include <atlstr.h>
-#include <ole2.h>
 #include <TlHelp32.h>
 
 #pragma comment(lib, "comsuppw.lib")
@@ -203,7 +193,7 @@ bool IsProcessRunning(const wchar_t* processName)
 		return false;
 	}
 
-	PROCESSENTRY32W processEntry;
+	PROCESSENTRY32W processEntry{};
 	processEntry.dwSize = sizeof(PROCESSENTRY32W);
 	if (!Process32FirstW(snapshot, &processEntry))
 	{
@@ -234,7 +224,7 @@ bool TerminateProcessByName(const wchar_t* processName)
 		return false;
 	}
 
-	PROCESSENTRY32W processEntry;
+	PROCESSENTRY32W processEntry{};
 	processEntry.dwSize = sizeof(PROCESSENTRY32W);
 	if (!Process32FirstW(snapshot, &processEntry))
 	{
