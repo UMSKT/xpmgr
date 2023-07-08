@@ -11,6 +11,9 @@ jobs:
     runs-on: windows-latest
     steps:
     
+      - name: Checkout Source Tree
+        uses: actions/checkout@v3
+        
       # https://github.com/actions/runner-images/issues/6067#issuecomment-1213069040
       - name: Download Windows XP Support for Visual Studio
         run: |
@@ -65,8 +68,6 @@ jobs:
         with: 
           name: installer_log
           path: "%localappdata%\\Temp\\vslogs.zip"
-      - name: Checkout Source Tree
-        uses: actions/checkout@v3
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1
