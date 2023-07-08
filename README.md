@@ -18,7 +18,7 @@ In general, don't use `xpmgr_debug_[arch].exe` unless you have a reason why.
 
 `--GetInstallationID`: Gets an Installation ID with **no dashes** (ex: `253286028742154311079061239762245184619981623171292574`). If already activated, this should give an error instead.
 
-`--SetConfirmationID`: Sets a Confirmation ID (tested to work with dashes). If already activated, this should give an error instead.
+`--SetConfirmationID`: Sets a Confirmation ID (tested to work with dashes). If already activated, this should give an error instead. If successful, this also removes the "Activate Windows" shortcuts and kills the WPA notifier process (`wpabaln.exe`) if it's running.
 
 `--GetWPALeft`: Gets the number of days before activation is required, in days. If already activated, this should give an error instead.
 
