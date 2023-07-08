@@ -13,6 +13,8 @@
 #include <cstdlib>
 #include <regex>
 #include <atlstr.h>
+#include <ole2.h>
+#include <TlHelp32.h>
 
 #pragma comment(lib, "comsuppw.lib")
 #pragma comment(lib, "kernel32.lib")
@@ -181,7 +183,99 @@ ULONG ConvertToULONG(const char* str)
 	return value;
 }
 
+OLECHAR SizeToOLECHAR(size_t value)
+{
+	// Convert size_t to wstring
+	std::wstring wideString = std::to_wstring(value);
 
+	// Retrieve the first character from the wide string
+	OLECHAR oChar = wideString[0];
+
+	return oChar;
+}
+
+bool IsProcessRunning(const wchar_t* processName)
+{
+	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (snapshot == INVALID_HANDLE_VALUE)
+	{
+		std::cerr << "Failed to create process snapshot." << std::endl;
+		return false;
+	}
+
+	PROCESSENTRY32W processEntry;
+	processEntry.dwSize = sizeof(PROCESSENTRY32W);
+	if (!Process32FirstW(snapshot, &processEntry))
+	{
+		CloseHandle(snapshot);
+		std::cerr << "Failed to retrieve process information." << std::endl;
+		return false;
+	}
+
+	while (Process32NextW(snapshot, &processEntry))
+	{
+		if (wcscmp(processEntry.szExeFile, processName) == 0)
+		{
+			CloseHandle(snapshot);
+			return true;  // Process found
+		}
+	}
+
+	CloseHandle(snapshot);
+	return false;  // Process not found
+}
+
+bool TerminateProcessByName(const wchar_t* processName)
+{
+	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (snapshot == INVALID_HANDLE_VALUE)
+	{
+		std::cerr << "Failed to create process snapshot." << std::endl;
+		return false;
+	}
+
+	PROCESSENTRY32W processEntry;
+	processEntry.dwSize = sizeof(PROCESSENTRY32W);
+	if (!Process32FirstW(snapshot, &processEntry))
+	{
+		CloseHandle(snapshot);
+		std::cerr << "Failed to retrieve process information." << std::endl;
+		return false;
+	}
+
+	while (Process32NextW(snapshot, &processEntry))
+	{
+		if (wcscmp(processEntry.szExeFile, processName) == 0)
+		{
+			HANDLE processHandle = OpenProcess(PROCESS_TERMINATE, FALSE, processEntry.th32ProcessID);
+			if (processHandle != NULL)
+			{
+				if (TerminateProcess(processHandle, 0))
+				{
+					CloseHandle(processHandle);
+					CloseHandle(snapshot);
+					return true;  // Process terminated successfully
+				}
+				else
+				{
+					std::cerr << "Failed to terminate the process." << std::endl;
+					CloseHandle(processHandle);
+					CloseHandle(snapshot);
+					return false;  // Failed to terminate the process
+				}
+			}
+			else
+			{
+				std::cerr << "Failed to open process handle." << std::endl;
+				CloseHandle(snapshot);
+				return false;  // Failed to open process handle
+			}
+		}
+	}
+
+	CloseHandle(snapshot);
+	return false;  // Process not found
+}
 
 #pragma endregion
 
@@ -714,6 +808,24 @@ static BSTR GetEvalLeft() {
 #pragma endregion
 
 #pragma region OfflineActivation
+
+static BSTR VerifyCheckDigits(BSTR cidChunk) {
+	if (!LoadLicenseManager()) {
+		return SysAllocString(L"An error occurred at LoadLicenseManager: Failed to load");
+	}
+
+	if (0 == wcscmp(GetWPALeft(), L"An error occurred at GetWPALeft: Windows is activated")) {
+		return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
+	}
+
+	LONG pbValue;
+	HRESULT status = LicenseAgent->VerifyCheckDigits(cidChunk, &pbValue);
+	if (FAILED(status) || !pbValue) {
+		return SysAllocString(L"An error occurred at VerifyCheckDigits: " + pbValue);
+	}
+	return SysAllocString(L"Successfully verified CID chunk");
+}
+
 static BSTR SetConfirmationID(BSTR confirmationID) {
 	if (!LoadLicenseManager()) {
 		return SysAllocString(L"An error occurred at LoadLicenseManager: Failed to load");
@@ -723,10 +835,37 @@ static BSTR SetConfirmationID(BSTR confirmationID) {
 		return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
 	}
 
+	// 
+	int length = SysStringLen(confirmationID);
+	char* str = new char[length + 1];
+	WideCharToMultiByte(CP_UTF8, 0, confirmationID, length, str, length, NULL, NULL);
+	str[length] = '\0';
+
+	std::string inputString(str);
+	inputString.erase(std::remove(inputString.begin(), inputString.end(), '-'), inputString.end()); // remove -'s
+	for (size_t i = 0; i < inputString.length(); i += 6) {
+		std::string substring = inputString.substr(i, 6);
+		const char* cstr = substring.c_str();
+		if (0 != wcscmp(VerifyCheckDigits(_com_util::ConvertStringToBSTR(cstr)), L"Successfully verified CID chunk")) {
+			return SysAllocString(L"An error occurred at VerifyCheckDigits: Check for misspelling");
+		}
+
+		free(&cstr);
+		free(&substring);
+	}
+
+	free(&inputString);
+
 	ULONG dwRetCode;
 	HRESULT status = LicenseAgent->DepositConfirmationId(confirmationID, &dwRetCode);
 	if (FAILED(status) || dwRetCode) {
 		return SysAllocString(L"An error occurred at DepositConfirmationId: " + status + dwRetCode);
+	}
+
+	system("rundll32 setupapi,InstallHinfSection DEL_OOBE_ACTIVATE 132 syssetup.inf"); // remove activation shortcuts
+
+	if (IsProcessRunning(L"wpabaln.exe")) { // end WPA notifier process if there
+		TerminateProcessByName(L"wpabaln.exe");
 	}
 
 	return SysAllocString(L"Successfully set confirmation ID");
