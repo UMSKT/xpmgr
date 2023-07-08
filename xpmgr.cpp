@@ -11,6 +11,8 @@
 #include <iostream>
 #include <comutil.h>
 #include <cstdlib>
+#include <regex>
+#include <atlstr.h>
 
 #pragma comment(lib, "comsuppw.lib")
 #pragma comment(lib, "kernel32.lib")
@@ -136,14 +138,6 @@ static BOOL LoadLicenseManager()
 			return FALSE;
 		}
 	}
-	ULONG dwWPALeft = 0, dwEvalLeft = 0;
-	HRESULT status = LicenseAgent->GetExpirationInfo(&dwWPALeft, &dwEvalLeft);
-	if (FAILED(status)) {
-		std::cout << "An error occurred at GetExpirationInfo: " + status;
-		LicenseAgent->Release();
-		LicenseAgent = NULL;
-		return FALSE;
-	}
 	return TRUE;
 }
 
@@ -186,6 +180,8 @@ ULONG ConvertToULONG(const char* str)
 	ULONG value = std::strtoul(str, &end, 10);
 	return value;
 }
+
+
 
 #pragma endregion
 
@@ -688,10 +684,9 @@ static BSTR GetWPALeft() {
 	ULONG dwWPALeft = 0, dwEvalLeft = 0;
 	HRESULT status = LicenseAgent->GetExpirationInfo(&dwWPALeft, &dwEvalLeft);
 	if (FAILED(status)) {
-		std::cout << "An error occurred at GetExpirationInfo: " + status;
 		LicenseAgent->Release();
 		LicenseAgent = NULL;
-		return SysAllocString(L"Failed to get expiration info");
+		return SysAllocString(L"An error occurred at GetExpirationInfo: " + status);
 	}
 	if (dwWPALeft == 0x7FFFFFFF) {
 		return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
@@ -707,10 +702,9 @@ static BSTR GetEvalLeft() {
 	ULONG dwWPALeft = 0, dwEvalLeft = 0;
 	HRESULT status = LicenseAgent->GetExpirationInfo(&dwWPALeft, &dwEvalLeft);
 	if (FAILED(status)) {
-		std::cout << "An error occurred at GetExpirationInfo: " + status;
 		LicenseAgent->Release();
 		LicenseAgent = NULL;
-		return SysAllocString(L"Failed to get expiration info");
+		return SysAllocString(L"An error occurred at GetExpirationInfo: " + status);
 	}
 	if (dwEvalLeft == 0x7FFFFFFF) {
 		return SysAllocString(L"An error occurred at GetEvalLeft: Not an evaluation copy");
@@ -732,8 +726,7 @@ static BSTR SetConfirmationID(BSTR confirmationID) {
 	ULONG dwRetCode;
 	HRESULT status = LicenseAgent->DepositConfirmationId(confirmationID, &dwRetCode);
 	if (FAILED(status) || dwRetCode) {
-		std::cout << "An error occurred at DepositConfirmationId: " + status + dwRetCode;
-		return SysAllocString(L"Failed to set confirmation ID");
+		return SysAllocString(L"An error occurred at DepositConfirmationId: " + status + dwRetCode);
 	}
 
 	return SysAllocString(L"Successfully set confirmation ID");
@@ -751,8 +744,7 @@ static BSTR GetInstallationID() {
 	BSTR installationID = NULL;
 	HRESULT status = LicenseAgent->GenerateInstallationId(&installationID);
 	if (FAILED(status) || !installationID) {
-		std::cout << "An error occurred at GenerateInstallationId: " + status;
-		return SysAllocString(L"Failed to get installation ID");
+		return SysAllocString(L"An error occurred at GenerateInstallationId: " + status);
 	}
 	else {
 		return installationID;
@@ -766,14 +758,21 @@ static BSTR SetProductKey(LPWSTR productKey) {
 		return SysAllocString(L"An error occurred at LoadLicenseManager: Failed to load");
 	}
 
+	std::wstring ws(productKey);
+	std::string productKeyToRegex = std::string(ws.begin(), ws.end());
+	std::regex pattern("[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}");
+
+	if (!std::regex_match(productKeyToRegex, pattern)) {
+		return SysAllocString(L"An error occurred at regex_match: Product key is invalid");
+	}
+
 	if (0 == wcscmp(GetWPALeft(), L"An error occurred at GetWPALeft: Windows is activated")) {
 		return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
 	}
 
 	HRESULT status = LicenseAgent->SetProductKey(productKey);
 	if (FAILED(status)) {
-		std::cout << "An error occurred at SetProductKey: " + status;
-		return SysAllocString(L"Failed to set product key");
+		return SysAllocString(L"An error occurred at SetProductKey: " + status);
 	}
 	else {
 		return SysAllocString(L"Successfully set product key");
@@ -789,8 +788,7 @@ static BSTR GetProductID() {
 
 	HRESULT status = LicenseAgent->GetProductID(&productID);
 	if (FAILED(status)) {
-		std::cout << "An error occurred at GetProductID: " + status;
-		return SysAllocString(L"Failed to get product ID");
+		return SysAllocString(L"An error occurred at GetProductID: " + status);
 	}
 	else {
 		return productID;
@@ -948,13 +946,13 @@ int main(int argc, char* argv[])
 #ifdef ENVIRONMENT32
 	if (systemInfo.wProcessorArchitecture != PROCESSOR_ARCHITECTURE_INTEL) { // running under WOW64
 		if (systemInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) { // is AMD64
-			std::cout << "An error occurred: Incorrect version of xpmgr. You need to download the x64 version.";
+			std::cout << "An error occurred at systemInfo: Incorrect version of xpmgr. You need to download the x64 version.";
 		}
 		else if (systemInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64) { // is IA64
-			std::cout << "An error occurred: Windows Product Activation does not exist on this platform.";
+			std::cout << "An error occurred at systemInfo: Windows Product Activation does not exist on this platform.";
 		}
 		else { // is PPC, megafart 386, whatever else
-			std::cout << "An error occurred: Incorrect version of xpmgr. Go to https://umskt.zulipchat.com if you want to help us make a version for your platform!";
+			std::cout << "An error occurred at systemInfo: Incorrect version of xpmgr. Go to https://umskt.zulipchat.com if you want to help us make a version for your platform!";
 		}
 		return 0;
 	}
@@ -966,12 +964,12 @@ int main(int argc, char* argv[])
 	GetVersionEx((LPOSVERSIONINFO)&info);
 
 	if (info.dwMajorVersion != 5) {
-		std::cout << "An error occurred: This tool only works on Windows NT 5.1 and 5.2.";
+		std::cout << "An error occurred at OSVERSIONINFOEX: This tool only works on Windows NT 5.1 and 5.2.";
 		return 0;
 	}
 	else {
 		if (info.dwMinorVersion != 1 && info.dwMinorVersion != 2) {
-			std::cout << "An error occurred: This tool only works on Windows NT 5.1 and 5.2.";
+			std::cout << "An error occurred OSVERSIONINFOEX: This tool only works on Windows NT 5.1 and 5.2.";
 			return 0;
 		}
 	}
@@ -1176,7 +1174,7 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 	else {
-		std::cout << "An error occurred: No arguments listed\n\n";
+		std::cout << "An error occurred at main: No arguments listed\n\n";
 		std::cout << text;
 		return 0;
 	}
