@@ -14,19 +14,17 @@ In general, don't use `xpmgr_debug_[arch].exe` unless you have a reason why.
 
 `--GetProductID`: Gets the product ID (ex: `76477-755-3803223-21229`).
 
-`--SetProductKey`: Sets the product key (tested to work with dashes). If successfully activated, this should give an error instead.
+`--SetProductKey`: Sets the product key (tested to work with dashes). If already activated, this should give an error instead.
 
-`--GetInstallationID`: Gets an Installation ID with **no dashes** (ex: `253286028742154311079061239762245184619981623171292574`). If successfully activated, this should give an error instead.
+`--GetInstallationID`: Gets an Installation ID with **no dashes** (ex: `253286028742154311079061239762245184619981623171292574`). If already activated, this should give an error instead.
 
-`--SetConfirmationID`: Sets a Confirmation ID (tested to work with dashes). If successfully activated, this should give an error instead.
+`--SetConfirmationID`: Sets a Confirmation ID (tested to work with dashes). If already activated, this should give an error instead.
 
-`--GetWPALeft`: Gets the number of days before activation is required, in days. If successfully activated, this should give an error instead.
+`--GetWPALeft`: Gets the number of days before activation is required, in days. If already activated, this should give an error instead.
 
 `--GetEvalLeft`: Gets the number of days before the evaluation period expires, in days. In non-evaluation copies of Windows, this should give an error instead.
 
 `--GetUsage`: Outputs all the commands you can use.
-
-Make sure you do commands right, since, as of now, there's no checking to make sure it's correct or not!
 
 ## Releases
 https://github.com/UMSKT/xpmgr/releases
