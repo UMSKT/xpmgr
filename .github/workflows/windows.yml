@@ -11,6 +11,31 @@ jobs:
     runs-on: windows-latest
     steps:
       # https://github.com/actions/runner-images/issues/6067#issuecomment-1213069040
+      - name: Download Windows XP Support for Visual Studio
+        run: |
+          if (Test-Path -Path "D:\a\VSLayout\Microsoft.Windows.XPSupport.Msi,version=11.0.51106.1,chip=x64\Win_XPSupport64.msi" == True) {
+              Write-Host "components already downloaded"
+              exit 0
+          }
+          Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
+          $InstallPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
+          $componentsToAdd = @(
+            "Microsoft.VisualStudio.Component.WinXP"
+          )
+          [string]$workloadArgs = $componentsToAdd | ForEach-Object {" --add " +  $_}
+          $Arguments = ('/c', "vs_installer.exe", '--layout D:\a\VSLayout', $workloadArgs)
+          $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
+          if ($process.ExitCode -eq 0)
+          {
+              Write-Host "components have been successfully downloaded"
+              Get-ChildItem D:\a\VSLayout\Microsoft.Windows.XPSupport.*
+          }
+          else
+          {
+              Write-Host "components were not downloaded"
+              exit 1
+          }
+        
       - name: Install Windows XP Support for Visual Studio
         run: |
           Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
@@ -19,7 +44,7 @@ jobs:
             "Microsoft.VisualStudio.Component.WinXP"
           )
           [string]$workloadArgs = $componentsToAdd | ForEach-Object {" --add " +  $_}
-          $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"",$workloadArgs, '--quiet', '--norestart', '--nocache', '--layout D:\a\VSLayout')
+          $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"",$workloadArgs, '--quiet', '--norestart', '--nocache', '--layout D:\a\VSLayout', '--noweb')
           $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
           if ($process.ExitCode -eq 0)
           {
