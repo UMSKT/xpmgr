@@ -220,7 +220,6 @@ bool TerminateProcessByName(const wchar_t* processName)
 	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	if (snapshot == INVALID_HANDLE_VALUE)
 	{
-		std::cerr << "Failed to create process snapshot." << std::endl;
 		return false;
 	}
 
@@ -229,7 +228,6 @@ bool TerminateProcessByName(const wchar_t* processName)
 	if (!Process32FirstW(snapshot, &processEntry))
 	{
 		CloseHandle(snapshot);
-		std::cerr << "Failed to retrieve process information." << std::endl;
 		return false;
 	}
 
@@ -248,7 +246,6 @@ bool TerminateProcessByName(const wchar_t* processName)
 				}
 				else
 				{
-					std::cerr << "Failed to terminate the process." << std::endl;
 					CloseHandle(processHandle);
 					CloseHandle(snapshot);
 					return false;  // Failed to terminate the process
@@ -256,7 +253,6 @@ bool TerminateProcessByName(const wchar_t* processName)
 			}
 			else
 			{
-				std::cerr << "Failed to open process handle." << std::endl;
 				CloseHandle(snapshot);
 				return false;  // Failed to open process handle
 			}
