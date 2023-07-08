@@ -47,11 +47,11 @@ jobs:
       - name: Upload build artifact (x86)
         uses: actions/upload-artifact@v3.1.2
         with:
-          name: xpmgr
+          name: xpmgr (x86)
           path: .\Win32\Release
           
       - name: Upload build artifact (x64)
         uses: actions/upload-artifact@v3.1.2
         with:
-          name: xpmgr
+          name: xpmgr (x64)
           path: .\x64\Release
