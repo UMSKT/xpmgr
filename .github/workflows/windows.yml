@@ -25,15 +25,21 @@ jobs:
           [string]$workloadArgs = $componentsToAdd | ForEach-Object {" --add " +  $_}
           $Arguments = ('/c', "vs_installer.exe", '--layout D:\a\VSLayout', $workloadArgs, '--quiet')
           $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
-          if ($process.ExitCode -eq 0)
-          {
+          if ($realProcess.ExitCode -eq 0) {
+          
+          }
+          else {
+            $realProcess = Get-Process vs_layout
+            if ($realProcess.ExitCode -eq 0)
+            {
               Write-Host "components have been successfully downloaded"
               Get-ChildItem D:\a\VSLayout\Microsoft.Windows.XPSupport.*
-          }
-          else
-          {
+            }
+            else
+            {
               Write-Host "components were not downloaded"
               exit 1
+            }
           }
         
       - name: Install Windows XP Support for Visual Studio
