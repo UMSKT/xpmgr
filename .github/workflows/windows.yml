@@ -19,7 +19,7 @@ jobs:
             "Microsoft.VisualStudio.Component.WinXP"
           )
           [string]$workloadArgs = $componentsToAdd | ForEach-Object {" --add " +  $_}
-          $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"",$workloadArgs, '--quiet', '--norestart', '--nocache')
+          $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"",$workloadArgs, '--quiet', '--norestart', '--nocache', '--layout D:\a\VSLayout')
           $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
           if ($process.ExitCode -eq 0)
           {
@@ -55,3 +55,8 @@ jobs:
         with:
           name: xpmgr (x64)
           path: .\x64\Release
+          
+      - name: Cache XP Support for Visual Studio
+        uses: actions/cache@v3
+        with:
+           path: D:\a\VSLayout
