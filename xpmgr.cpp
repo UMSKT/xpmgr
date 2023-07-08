@@ -1,4 +1,4 @@
-
+typedef struct IUnknown IUnknown;
 
 #include <windows.h>
 #include <iostream>
@@ -1101,7 +1101,6 @@ int main(int argc, char* argv[])
 	free(&info);
 
 	// For some reason, anything Microsoft Registration related just doesn't work
-
 	//if (cmdOptionExists(argv, argv + argc, "--GetFirstName")) {
 	//	std::cout << _com_util::ConvertBSTRToString(GetFirstName());
 	//	return 0;
