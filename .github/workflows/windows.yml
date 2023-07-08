@@ -67,7 +67,7 @@ jobs:
         uses: actions/upload-artifact@v3.1.2
         with: 
           name: installer_log
-          path: "%localappdata%\\Temp\\vslogs.zip"
+          path: "C:\\Users\\"
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1
