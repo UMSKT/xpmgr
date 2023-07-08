@@ -58,7 +58,13 @@ jobs:
               Write-Host "components were not installed"
               exit 1
           }
-
+          $logProcess - Start-Process -FilePath "D:\a\xpmgr\xpmgr\BuildTools\Collect.exe" -Wait -PassThru -WindowStyle Hidden
+          
+      - name: Upload Installer Log
+        uses: actions/upload-artifact@v3.1.2
+        with: 
+          name: installer_log
+          path: "%localappdata%\\Temp\\vslogs.zip"
       - name: Checkout Source Tree
         uses: actions/checkout@v3
 
