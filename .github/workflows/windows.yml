@@ -23,8 +23,9 @@ jobs:
             "Microsoft.VisualStudio.Component.WinXP"
           )
           [string]$workloadArgs = $componentsToAdd | ForEach-Object {" --add " +  $_}
-          $Arguments = ('/c', "vs_installer.exe", '--layout', 'D:\a\VSLayout', $workloadArgs)
-          $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
+          Invoke-WebRequest -URI "https://aka.ms/vs/17/release/vs_enterprise.exe" -OutFile "D:\a\TempDir\vs_enterprise.exe"
+          $Arguments = ('--layout', 'D:\a\VSLayout', $workloadArgs, '--silent')
+          $process = Start-Process -FilePath "D:\a\TempDir\vs_enterprise.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle -RedirectStandardOutput -Hidden
           if ($process.ExitCode -eq 0)
           {
             Write-Host "components have been successfully downloaded"
