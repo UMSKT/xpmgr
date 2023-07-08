@@ -17,7 +17,6 @@ jobs:
       # https://github.com/actions/runner-images/issues/6067#issuecomment-1213069040
       - name: Download Windows XP Support for Visual Studio
         run: |
-          Get-ChildItem C:\Users\
           if (Test-Path -Path "D:\a\VSLayout\Microsoft.Windows.XPSupport.Msi,version=11.0.51106.1,chip=x64\Win_XPSupport64.msi") {
               Write-Host "components already downloaded"
               exit 0
@@ -68,7 +67,7 @@ jobs:
         uses: actions/upload-artifact@v3.1.2
         with: 
           name: installer_log
-          path: "C:\\Users\\"
+          path: "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\vslogs.zip"
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1
