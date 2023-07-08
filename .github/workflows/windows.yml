@@ -44,8 +44,14 @@ jobs:
       - name: Build xpmgr (x64)
         run: msbuild xpmgr.vcxproj /P:Configuration=Release /P:Platform=x64
 
-      - name: Upload build artifact
+      - name: Upload build artifact (x86)
         uses: actions/upload-artifact@v3.1.2
         with:
           name: xpmgr
-          path: .
+          path: .\Win32\Release
+          
+      - name: Upload build artifact (x64)
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: xpmgr
+          path: .\x64\Release
