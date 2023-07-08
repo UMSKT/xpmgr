@@ -24,7 +24,7 @@ jobs:
           )
           [string]$workloadArgs = $componentsToAdd | ForEach-Object {" --add " +  $_}
           Invoke-WebRequest -URI "https://aka.ms/vs/17/release/vs_enterprise.exe" -OutFile "D:\a\_temp\vs_enterprise.exe"
-          $Arguments = ('/c', 'D:\a\_temp\vs_enterprise.exe', '--layout', 'D:\a\VSLayout', $workloadArgs, '--silent')
+          $Arguments = ('/c', 'D:\a\_temp\vs_enterprise.exe', '--layout', 'D:\a\VSLayout', $workloadArgs, '--quiet')
           $process = Start-Process -FilePath "cmd" -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
           if ($process.ExitCode -eq 0)
           {
