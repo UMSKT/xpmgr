@@ -46,7 +46,7 @@ jobs:
             "Microsoft.VisualStudio.Component.WinXP"
           )
           [string]$workloadArgs = $componentsToAdd | ForEach-Object {" --add " +  $_}
-          $Arguments = ('/c', 'D:\a\VSLayout\vs_enterprise.exe', 'modify', '--installPath', "`"$InstallPath`"", '--quiet', '--norestart', '--nocache', '--noweb')
+          $Arguments = ('/c', 'D:\a\VSLayout\vs_enterprise.exe', 'modify', '--installPath', "`"$InstallPath`"", '--quiet', '--norestart', '--nocache', '--noweb', '--wait')
           $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
           if ($process.ExitCode -eq 0)
           {
