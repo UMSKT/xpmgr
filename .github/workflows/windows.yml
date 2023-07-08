@@ -25,7 +25,7 @@ jobs:
           [string]$workloadArgs = $componentsToAdd | ForEach-Object {" --add " +  $_}
           Invoke-WebRequest -URI "https://aka.ms/vs/17/release/vs_enterprise.exe" -OutFile "D:\a\_temp\vs_enterprise.exe"
           $Arguments = ('--layout', 'D:\a\VSLayout', $workloadArgs, '--silent')
-          $process = Start-Process -FilePath "D:\a\_temp\vs_enterprise.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle -RedirectStandardOutput -Hidden
+          $process = Start-Process -FilePath "D:\a\_temp\vs_enterprise.exe" -ArgumentList $Arguments -Wait -PassThru -WindowStyle -RedirectStandardOutput -Hidden
           if ($process.ExitCode -eq 0)
           {
             Write-Host "components have been successfully downloaded"
