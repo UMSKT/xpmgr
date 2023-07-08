@@ -10,6 +10,7 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
+    
       # https://github.com/actions/runner-images/issues/6067#issuecomment-1213069040
       - name: Download Windows XP Support for Visual Studio
         run: |
@@ -23,7 +24,7 @@ jobs:
             "Microsoft.VisualStudio.Component.WinXP"
           )
           [string]$workloadArgs = $componentsToAdd | ForEach-Object {" --add " +  $_}
-          Invoke-WebRequest -URI "https://aka.ms/vs/17/release/vs_enterprise.exe" -OutFile "D:\a\_temp\vs_enterprise.exe"
+          Invoke-WebRequest -URI "https://aka.ms/vs/17/release/vs_enterprise.exe" -OutFile "D:\a\_temp\vs_enterprise.exe\"\
           $Arguments = ('/c', 'D:\a\_temp\vs_enterprise.exe', '--layout', 'D:\a\VSLayout', $workloadArgs, '--quiet')
           $process = Start-Process -FilePath "cmd" -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
           if ($process.ExitCode -eq 0)
@@ -45,7 +46,7 @@ jobs:
             "Microsoft.VisualStudio.Component.WinXP"
           )
           [string]$workloadArgs = $componentsToAdd | ForEach-Object {" --add " +  $_}
-          $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"",$workloadArgs, '--quiet', '--norestart', '--nocache', '--layout D:\a\VSLayout', '--noweb')
+          $Arguments = ('/c', 'D:\a\VSLayout\vs_enterprise.exe', 'modify', '--installPath', "`"$InstallPath`"", '--quiet', '--norestart', '--nocache', '--noweb')
           $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
           if ($process.ExitCode -eq 0)
           {
