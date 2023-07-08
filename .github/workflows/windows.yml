@@ -33,7 +33,7 @@ jobs:
           }
           else
           {
-            Write-Host "components were not downloaded".
+            Write-Host "components were not downloaded"
             exit 1
           }
         
