@@ -14,8 +14,14 @@ jobs:
       - name: Checkout Source Tree
         uses: actions/checkout@v3
         
+      - name: Restore cached v141_xp
+        uses: actions/cache/restore@v3
+        with:
+          path: "D:\\a\\VSLayout"
+          key: v141_xp
+        
       # https://github.com/actions/runner-images/issues/6067#issuecomment-1213069040
-      - name: Download Windows XP Support for Visual Studio
+      - name: Download v141_xp
         run: |
           if (Test-Path -Path "D:\a\VSLayout\Microsoft.Windows.XPSupport.Msi,version=11.0.51106.1,chip=x64\Win_XPSupport64.msi") {
               Write-Host "components already downloaded"
@@ -41,7 +47,7 @@ jobs:
             exit 1
           }
         
-      - name: Install Windows XP Support for Visual Studio
+      - name: Install v141_xp
         run: |
           Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
           $InstallPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
@@ -90,7 +96,7 @@ jobs:
           name: xpmgr (x64)
           path: .\x64\Release
           
-      - name: Cache XP Support for Visual Studio
+      - name: Cache v141_xp
         uses: actions/cache@v3
         with:
            path: D:\a\VSLayout
