@@ -10,46 +10,8 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-    
-      - name: Checkout Source Tree
-        uses: actions/checkout@v3
-        
-      - name: Restore cached v141_xp
-        id: installCache
-        uses: actions/cache/restore@v3
-        with:
-          path: "C:\\Users\\runneradmin\\VSLayout"
-          key: v141_xp
-        
       # https://github.com/actions/runner-images/issues/6067#issuecomment-1213069040
-      - name: Download v141_xp
-        run: |
-          if (Test-Path -Path "C:\Users\runneradmin\VSLayout\Microsoft.Windows.XPSupport.Msi,version=11.0.51106.1,chip=x64\Win_XPSupport64.msi") {
-              Write-Host "components already downloaded"
-              Get-ChildItem C:\Users\runneradmin\VSLayout\Microsoft.Windows.XPSupport.*
-              exit 0
-          }
-          Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
-          $InstallPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
-          $componentsToAdd = @(
-            "Microsoft.VisualStudio.Component.WinXP"
-          )
-          [string]$workloadArgs = $componentsToAdd | ForEach-Object {" --add " +  $_}
-          Invoke-WebRequest -URI "https://aka.ms/vs/17/release/vs_enterprise.exe" -OutFile "D:\a\_temp\vs_enterprise.exe"
-          $Arguments = ('/c', 'D:\a\_temp\vs_enterprise.exe', '--layout', 'C:\Users\runneradmin\VSLayout', $workloadArgs, '--quiet')
-          $process = Start-Process -FilePath "cmd" -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
-          if ($process.ExitCode -eq 0)
-          {
-            Write-Host "components have been successfully downloaded"
-            exit 0
-          }
-          else
-          {
-            Write-Host "components were not downloaded"
-            exit 1
-          }
-        
-      - name: Install v141_xp
+      - name: Install Windows XP Support for Visual Studio
         run: |
           Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
           $InstallPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
@@ -57,7 +19,7 @@ jobs:
             "Microsoft.VisualStudio.Component.WinXP"
           )
           [string]$workloadArgs = $componentsToAdd | ForEach-Object {" --add " +  $_}
-          $Arguments = ('/c', 'C:\Users\runneradmin\VSLayout\vs_enterprise.exe', 'modify', '--installPath', "`"$InstallPath`"", $workloadArgs, '--quiet', '--norestart', '--nocache', '--noweb', '--wait')
+          $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"",$workloadArgs, '--quiet', '--norestart', '--nocache')
           $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
           if ($process.ExitCode -eq 0)
           {
@@ -69,7 +31,10 @@ jobs:
               Write-Host "components were not installed"
               exit 1
           }
-          
+
+      - name: Checkout Source Tree
+        uses: actions/checkout@v3
+
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1
 
@@ -90,10 +55,3 @@ jobs:
         with:
           name: xpmgr (x64)
           path: .\x64\Release
-          
-      - name: Cache v141_xp
-        if: steps.installCache.outputs.cache-hit != 'true'
-        uses: actions/cache@v3
-        with:
-           path: C:\Users\runneradmin\VSLayout
-           key: v141_xp
