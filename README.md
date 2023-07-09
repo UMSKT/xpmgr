@@ -30,6 +30,4 @@ In general, don't use `xpmgr_debug_[arch].exe` unless you have a reason why.
 https://github.com/UMSKT/xpmgr/releases
 
 ## Building
-Due to GitHub not wanting to cooperate with auto-building for Windows XP (who would have thought?), you need to build it yourself.
-
 Make sure Visual Studio 2017 or later is installed, with the v141_xp toolchain. Then, `git clone`, open in VS, build, done.
