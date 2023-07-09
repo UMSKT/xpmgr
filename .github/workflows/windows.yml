@@ -15,6 +15,7 @@ jobs:
         uses: actions/checkout@v3
         
       - name: Restore cached v141_xp
+        id: installCache
         uses: actions/cache/restore@v3
         with:
           path: "C:\\Users\\runneradmin\\VSLayout"
@@ -91,6 +92,7 @@ jobs:
           path: .\x64\Release
           
       - name: Cache v141_xp
+        if: steps.installCache.outputs.cache-hit != 'true'
         uses: actions/cache@v3
         with:
            path: C:\Users\runneradmin\VSLayout
