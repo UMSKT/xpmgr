@@ -12,7 +12,7 @@ jobs:
     steps:
 
       - name: Install v141_xp
-        uses: thepwrtank18/install-vs-components@v1.0.0-beta3
+        uses: thepwrtank18/install-vs-components@v1.0.0-beta4
         with:
           components: Microsoft.VisualStudio.Component.WinXP
           
