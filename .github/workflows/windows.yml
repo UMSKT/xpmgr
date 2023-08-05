@@ -15,7 +15,10 @@ jobs:
         uses: thepwrtank18/install-vs-components@v1.0.0
         with:
           components: Microsoft.VisualStudio.Component.WinXP
-          
+      
+      - name: Fix Windows SDK
+        run: Remove-Item "C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\Include" -Force -Recurse; Move-Item "D:\xpmgr\xpmgr\BuildTools\Include" "C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\Include"
+
       - name: Checkout Source Tree
         uses: actions/checkout@v3
 
