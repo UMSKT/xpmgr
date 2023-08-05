@@ -16,118 +16,7 @@
 #endif
 #endif
 
-typedef struct IUnknown IUnknown;
-
-// The magic numbers, interface, and LoadLicenseManager() function was made by diamondggg on MyDigitalLife.
-// LoadLicenseManager() was modified to suit a CLI rather than a GUI.
-// Everything else was either made by TheTank20 or copy pasted from StackOverflow.
-static CLSID xp_licdllCLSID = { 0xACADF079, 0xCBCD, 0x4032, {0x83, 0xF2, 0xFA, 0x47, 0xC4, 0xDB, 0x09, 0x6F} };
-static IID xp_licenseAgentIID = { 0xB8CBAD79, 0x3F1F, 0x481A, {0xBB, 0x0C, 0xE7, 0xBB, 0xD7, 0x7B, 0xDD, 0xD1} };
-
-#undef XP_INTERFACE
-#define XP_INTERFACE ICOMLicenseAgent
-DECLARE_INTERFACE_(ICOMLicenseAgent, IDispatch)
-{
-	/*** IUnknown methods ***/
-	STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID * ppvObj) PURE;
-	STDMETHOD_(ULONG, AddRef)(THIS) PURE;
-	STDMETHOD_(ULONG, Release)(THIS) PURE;
-
-	/*** IDispatch methods ***/
-	STDMETHOD(GetTypeInfoCount)(THIS_ UINT FAR * pctinfo) PURE;
-	STDMETHOD(GetTypeInfo)(THIS_ UINT itinfo, LCID lcid, ITypeInfo FAR * FAR * pptinfo) PURE;
-	STDMETHOD(GetIDsOfNames)(THIS_ REFIID riid, OLECHAR FAR * FAR * rgszNames, UINT cNames, LCID lcid, DISPID FAR * rgdispid) PURE;
-	STDMETHOD(Invoke)(THIS_ DISPID dispidMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS FAR * pdispparams, VARIANT FAR * pvarResult, EXCEPINFO FAR * pexcepinfo, UINT FAR * puArgErr) PURE;
-
-	/*** ICOMLicenseAgent methods ***/
-	STDMETHOD(Initialize)(THIS_ ULONG dwBPC, ULONG dwMode, BSTR bstrLicSource, ULONG * pdwRetCode) PURE;
-	STDMETHOD(GetFirstName)(THIS_ BSTR * pbstrVal) PURE; // implemented
-	STDMETHOD(SetFirstName)(THIS_ BSTR bstrNewVal) PURE; // implemented
-	STDMETHOD(GetLastName)(THIS_ BSTR * pbstrVal) PURE; // implemented
-	STDMETHOD(SetLastName)(THIS_ BSTR bstrNewVal) PURE; // implemented
-	STDMETHOD(GetOrgName)(THIS_ BSTR * pbstrVal) PURE; // implemented
-	STDMETHOD(SetOrgName)(THIS_ BSTR bstrNewVal) PURE; // implemented
-	STDMETHOD(GetEmail)(THIS_ BSTR * pbstrVal) PURE; // implemented
-	STDMETHOD(SetEmail)(THIS_ BSTR bstrNewVal) PURE; // implemented
-	STDMETHOD(GetPhone)(THIS_ BSTR * pbstrVal) PURE; // implemented
-	STDMETHOD(SetPhone)(THIS_ BSTR bstrNewVal) PURE; // implemented
-	STDMETHOD(GetAddress1)(THIS_ BSTR * pbstrVal) PURE; // implemented
-	STDMETHOD(SetAddress1)(THIS_ BSTR bstrNewVal) PURE; // implemented
-	STDMETHOD(GetCity)(THIS_ BSTR * pbstrVal) PURE; // implemented
-	STDMETHOD(SetCity)(THIS_ BSTR bstrNewVal) PURE; // implemented
-	STDMETHOD(GetState)(THIS_ BSTR * pbstrVal) PURE; // implemented
-	STDMETHOD(SetState)(THIS_ BSTR bstrNewVal) PURE; // implemented
-	STDMETHOD(GetCountryCode)(THIS_ BSTR * pbstrVal) PURE; // implemented
-	STDMETHOD(SetCountryCode)(THIS_ BSTR bstrNewVal) PURE; // implemented
-	STDMETHOD(GetCountryDesc)(THIS_ BSTR * pbstrVal) PURE; // implemented
-	STDMETHOD(SetCountryDesc)(THIS_ BSTR bstrNewVal) PURE; // implemented
-	STDMETHOD(GetZip)(THIS_ BSTR * pbstrVal) PURE; // implemented
-	STDMETHOD(SetZip)(THIS_ BSTR bstrNewVal) PURE; // implemented
-	STDMETHOD(GetIsoLanguage)(THIS_ ULONG * pdwVal) PURE; // implemented
-	STDMETHOD(SetIsoLanguage)(THIS_ ULONG dwNewVal) PURE; // implemented
-	STDMETHOD(GetMSUpdate)(THIS_ BSTR * pbstrVal) PURE; // implemented
-	STDMETHOD(SetMSUpdate)(THIS_ BSTR bstrNewVal) PURE; // implemented
-	STDMETHOD(GetMSOffer)(THIS_ BSTR * pbstrVal) PURE; // implemented
-	STDMETHOD(SetMSOffer)(THIS_ BSTR bstrNewVal) PURE; // implemented
-	STDMETHOD(GetOtherOffer)(THIS_ BSTR * pbstrVal) PURE; // implemented
-	STDMETHOD(SetOtherOffer)(THIS_ BSTR bstrNewVal) PURE; // implemented
-	STDMETHOD(GetAddress2)(THIS_ BSTR * pbstrVal) PURE; // implemented
-	STDMETHOD(SetAddress2)(THIS_ BSTR bstrNewVal) PURE; // implemented
-	STDMETHOD(AsyncProcessHandshakeRequest)(THIS_ LONG bReviseCustInfo) PURE;
-	STDMETHOD(AsyncProcessNewLicenseRequest)(THIS) PURE;
-	STDMETHOD(AsyncProcessReissueLicenseRequest)(THIS) PURE;
-	STDMETHOD(AsyncProcessReviseCustInfoRequest)(THIS) PURE;
-	STDMETHOD(GetAsyncProcessReturnCode)(THIS_ ULONG * pdwRetCode) PURE;
-	STDMETHOD(AsyncProcessDroppedLicenseRequest)(THIS) PURE; 
-	STDMETHOD(GenerateInstallationId)(THIS_ BSTR * pbstrVal) PURE; // implemented
-	STDMETHOD(DepositConfirmationId)(THIS_ BSTR bstrVal, ULONG * pdwRetCode) PURE; // implemented
-	STDMETHOD(GetExpirationInfo)(THIS_ ULONG * pdwWPALeft, ULONG * pdwEvalLeft) PURE; // implemented
-	STDMETHOD(AsyncProcessRegistrationRequest)(THIS) PURE;
-	STDMETHOD(ProcessHandshakeRequest)(THIS_ LONG bReviseCustInfo) PURE;
-	STDMETHOD(ProcessNewLicenseRequest)(THIS) PURE; // implemented
-	STDMETHOD(ProcessDroppedLicenseRequest)(THIS) PURE; // implemented
-	STDMETHOD(ProcessReissueLicenseRequest)(THIS) PURE; // implemented
-	STDMETHOD(ProcessReviseCustInfoRequest)(THIS) PURE; // implemented
-	STDMETHOD(EnsureInternetConnection)(THIS) PURE; // implemented
-	STDMETHOD(SetProductKey)(THIS_ LPWSTR pszNewProductKey) PURE; // implemented
-	STDMETHOD(GetProductID)(THIS_ BSTR * pbstrVal) PURE; // implemented
-	STDMETHOD(VerifyCheckDigits)(THIS_ BSTR bstrCIDIID, LONG * pbValue) PURE;
-};
-
-static BOOL XP_ComInitialized = FALSE;
-static ICOMLicenseAgent* XP_LicenseAgent = NULL;
-
-static BOOL LoadLicenseManager()
-{
-	if (!XP_ComInitialized) {
-		HRESULT status = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-		if (FAILED(status)) {
-			std::cout << "An error occurred at CoInitializeEx: ", status;
-			return FALSE;
-		}
-		XP_ComInitialized = TRUE;
-	}
-	if (!XP_LicenseAgent) {
-		HRESULT status = CoCreateInstance(xp_licdllCLSID, NULL, CLSCTX_INPROC_SERVER, xp_licenseAgentIID, (void**)&XP_LicenseAgent);
-		int good = 0;
-		if (SUCCEEDED(status)) {
-			ULONG dwRetCode;
-			status = XP_LicenseAgent->Initialize(0xC475, 3, 0, &dwRetCode);
-			if (SUCCEEDED(status) && dwRetCode == 0) {
-				good = 1;
-			}
-			else {
-				XP_LicenseAgent->Release();
-				XP_LicenseAgent = NULL;
-			}
-		}
-		if (!good) {
-			std::cout << "An error occurred at CoCreateInstance: " + status;
-			return FALSE;
-		}
-	}
-	return TRUE;
-}
+// Internal stuff
 
 wchar_t* convertCharArrayToLPCWSTR(const char* charArray)
 {
@@ -256,6 +145,118 @@ bool TerminateProcessByName(const wchar_t* processName)
 
 	CloseHandle(snapshot);
 	return false;  // Process not found
+}
+
+typedef struct IUnknown IUnknown;
+
+// The magic numbers, interface, and LoadLicenseManager() function was made by diamondggg on MyDigitalLife.
+// LoadLicenseManager() was modified to suit a CLI rather than a GUI.
+// Everything else was either made by TheTank20 or copy pasted from StackOverflow.
+static CLSID xp_licdllCLSID = { 0xACADF079, 0xCBCD, 0x4032, {0x83, 0xF2, 0xFA, 0x47, 0xC4, 0xDB, 0x09, 0x6F} };
+static IID xp_licenseAgentIID = { 0xB8CBAD79, 0x3F1F, 0x481A, {0xBB, 0x0C, 0xE7, 0xBB, 0xD7, 0x7B, 0xDD, 0xD1} };
+#undef XP_INTERFACE
+#define XP_INTERFACE ICOMLicenseAgent
+DECLARE_INTERFACE_(ICOMLicenseAgent, IDispatch)
+{
+	/*** IUnknown methods ***/
+	STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID * ppvObj) PURE;
+	STDMETHOD_(ULONG, AddRef)(THIS) PURE;
+	STDMETHOD_(ULONG, Release)(THIS) PURE;
+
+	/*** IDispatch methods ***/
+	STDMETHOD(GetTypeInfoCount)(THIS_ UINT FAR * pctinfo) PURE;
+	STDMETHOD(GetTypeInfo)(THIS_ UINT itinfo, LCID lcid, ITypeInfo FAR * FAR * pptinfo) PURE;
+	STDMETHOD(GetIDsOfNames)(THIS_ REFIID riid, OLECHAR FAR * FAR * rgszNames, UINT cNames, LCID lcid, DISPID FAR * rgdispid) PURE;
+	STDMETHOD(Invoke)(THIS_ DISPID dispidMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS FAR * pdispparams, VARIANT FAR * pvarResult, EXCEPINFO FAR * pexcepinfo, UINT FAR * puArgErr) PURE;
+
+	/*** ICOMLicenseAgent methods ***/
+	STDMETHOD(Initialize)(THIS_ ULONG dwBPC, ULONG dwMode, BSTR bstrLicSource, ULONG * pdwRetCode) PURE;
+	STDMETHOD(GetFirstName)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetFirstName)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetLastName)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetLastName)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetOrgName)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetOrgName)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetEmail)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetEmail)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetPhone)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetPhone)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetAddress1)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetAddress1)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetCity)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetCity)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetState)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetState)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetCountryCode)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetCountryCode)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetCountryDesc)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetCountryDesc)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetZip)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetZip)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetIsoLanguage)(THIS_ ULONG * pdwVal) PURE;
+	STDMETHOD(SetIsoLanguage)(THIS_ ULONG dwNewVal) PURE;
+	STDMETHOD(GetMSUpdate)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetMSUpdate)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetMSOffer)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetMSOffer)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetOtherOffer)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetOtherOffer)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetAddress2)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetAddress2)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(AsyncProcessHandshakeRequest)(THIS_ LONG bReviseCustInfo) PURE;
+	STDMETHOD(AsyncProcessNewLicenseRequest)(THIS) PURE;
+	STDMETHOD(AsyncProcessReissueLicenseRequest)(THIS) PURE;
+	STDMETHOD(AsyncProcessReviseCustInfoRequest)(THIS) PURE;
+	STDMETHOD(GetAsyncProcessReturnCode)(THIS_ ULONG * pdwRetCode) PURE;
+	STDMETHOD(AsyncProcessDroppedLicenseRequest)(THIS) PURE; 
+	STDMETHOD(GenerateInstallationId)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(DepositConfirmationId)(THIS_ BSTR bstrVal, ULONG * pdwRetCode) PURE;
+	STDMETHOD(GetExpirationInfo)(THIS_ ULONG * pdwWPALeft, ULONG * pdwEvalLeft) PURE;
+	STDMETHOD(AsyncProcessRegistrationRequest)(THIS) PURE;
+	STDMETHOD(ProcessHandshakeRequest)(THIS_ LONG bReviseCustInfo) PURE;
+	STDMETHOD(ProcessNewLicenseRequest)(THIS) PURE;
+	STDMETHOD(ProcessDroppedLicenseRequest)(THIS) PURE;
+	STDMETHOD(ProcessReissueLicenseRequest)(THIS) PURE;
+	STDMETHOD(ProcessReviseCustInfoRequest)(THIS) PURE;
+	STDMETHOD(EnsureInternetConnection)(THIS) PURE;
+	STDMETHOD(SetProductKey)(THIS_ LPWSTR pszNewProductKey) PURE;
+	STDMETHOD(GetProductID)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(VerifyCheckDigits)(THIS_ BSTR bstrCIDIID, LONG * pbValue) PURE;
+};
+
+static BOOL XP_ComInitialized = FALSE;
+static ICOMLicenseAgent* XP_LicenseAgent = NULL;
+
+static BOOL LoadLicenseManager()
+{
+	if (!XP_ComInitialized) {
+		HRESULT status = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+		if (FAILED(status)) {
+			std::cout << "An error occurred at CoInitializeEx: ", status;
+			return FALSE;
+		}
+		XP_ComInitialized = TRUE;
+	}
+	if (!XP_LicenseAgent) {
+		HRESULT status = CoCreateInstance(xp_licdllCLSID, NULL, CLSCTX_INPROC_SERVER, xp_licenseAgentIID, (void**)&XP_LicenseAgent);
+		int good = 0;
+		if (SUCCEEDED(status)) {
+			ULONG dwRetCode;
+			status = XP_LicenseAgent->Initialize(0xC475, 3, 0, &dwRetCode);
+			if (SUCCEEDED(status) && dwRetCode == 0) {
+				good = 1;
+			}
+			else {
+				XP_LicenseAgent->Release();
+				XP_LicenseAgent = NULL;
+			}
+		}
+		if (!good) {
+			std::cout << "An error occurred at CoCreateInstance: " + status;
+			return FALSE;
+		}
+	}
+	return TRUE;
 }
 
 static BSTR GetWPALeft() {
