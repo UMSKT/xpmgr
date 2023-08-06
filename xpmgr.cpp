@@ -24,7 +24,7 @@ const char* specifiedProduct = NULL;
 static CLSID XP_CLSID = { 0xACADF079, 0xCBCD, 0x4032, {0x83, 0xF2, 0xFA, 0x47, 0xC4, 0xDB, 0x09, 0x6F} };
 static IID XP_IID = { 0xB8CBAD79, 0x3F1F, 0x481A, {0xBB, 0x0C, 0xE7, 0xBB, 0xD7, 0x7B, 0xDD, 0xD1} };
 
-static CLSID O2003_CLSID = { 0x000C0114, 0x0000, 0x0000, { 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 } };
+static CLSID O2003_CLSID = { 0x2DF8D04C, 0x5BFA, 0x101B, { 0xBD, 0xE5, 0x00, 0xAA, 0x00, 0x44, 0xDE, 0x52 } };
 static IID O2003_IID = { 0x00194002, 0xD9C3, 0x11D3, { 0x8D, 0x59, 0x00, 0x50, 0x04, 0x83, 0x84, 0xE3 } };
 
 #undef XP_INTERFACE
@@ -236,7 +236,7 @@ static BOOL XP_LoadLicenseManager()
 		int good = 0;
 		if (SUCCEEDED(status)) {
 			ULONG dwRetCode;
-			status = XP_LicenseAgent->Initialize(0xC475, 3, 0, &dwRetCode);
+			status = XP_LicenseAgent->Initialize(0xC475 /* This needs to be changed, I believe it's causing the crashing.*/ , 3, 0, &dwRetCode);
 			if (SUCCEEDED(status) && dwRetCode == 0) {
 				good = 1;
 			}
@@ -639,13 +639,18 @@ static BSTR O2003_SetConfirmationID(BSTR confirmationID) {
 
 static BSTR O2003_GetInstallationID() {
 	if (!O2003_LoadLicenseManager()) {
-		return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
+		return SysAllocString(L"An error occurred at O2003_LoadLicenseManager: Failed to load");
 	}
-
+	else {
+		std::cout << "DEBUG: LoadLicenseManager checked";
+	}
+ 
 	// TODO: find a way to check office 2003 activation status
 
 	BSTR installationID = NULL;
+	std::cout << "DEBUG: installationID = NULL";
 	HRESULT status = O2003_LicenseAgent->GenerateInstallationId(&installationID);
+	std::cout << "DEBUG: GenerateInstallationID executed";
 	if (FAILED(status) || !installationID) {
 		return SysAllocString(L"An error occurred at GenerateInstallationId: " + status);
 	}
@@ -663,12 +668,12 @@ int main(int argc, char* argv[])
 		"\n"
 		"Usage: \n"
 		"--GetInstallationID: Gets the Installation ID\n"
-		"--SetConfirmationID [cid]: Sets Confirmation ID (If successful, activates Windows)\n"
+		"--SetConfirmationID [cid]: Sets Confirmation ID (If successful, activates Windows/Office)\n"
 		"--GetWPALeft: Gets the days before activation is required (Grace period)\n"
 		"--GetEvalLeft: Gets the days before the evaluation period expires (Eval. copies only)\n"
 		"--SetProductKey [pkey]: Sets/changes product key\n"
 		"--GetProductID: Gets the product ID of Windows\n"
-		"--Office2003: Manages Office 2003 rather than Windows (32-bit xpmgr only)\n"
+		"--Office2003: Manages Office 2003 rather than Windows [EXPERIMENTAL] (32-bit xpmgr only)\n"
 		"--GetUsage: Displays this message";
 
 	if (cmdOptionExists(argv, argv + argc, "--GetUsage")) {
@@ -682,7 +687,7 @@ int main(int argc, char* argv[])
 			specifiedProduct = "Office2003";
 		}
 		else {
-			std::cout << "An error occurred at RegistryKeyExists: Office 2003 isn't detected (specifically, it's COM Module, responsible for activation).\nPlease (re)install Office 2003, since you wouldn't be able to activate via the GUI anyway.";
+			std::cout << "An error occurred at RegistryKeyExists: Office 2003 isn't detected (specifically, it's COM Module, responsible for activation). Please (re)install Office 2003, since you wouldn't be able to activate via the GUI anyway.";
 			return 0;
 		}
 	}
@@ -743,28 +748,52 @@ int main(int argc, char* argv[])
 	}
 
 	if (cmdOptionExists(argv, argv + argc, "--GetInstallationID")) {
+		if (specifiedProduct == "Office2003") {
+			std::cout << _com_util::ConvertBSTRToString(O2003_GetInstallationID());
+			return 0;
+		}
 		std::cout << _com_util::ConvertBSTRToString(XP_GetInstallationID());
 		return 0;
 	}
 	else if (cmdOptionExists(argv, argv + argc, "--SetConfirmationID")) {
+		if (specifiedProduct == "Office2003") {
+			std::cout << _com_util::ConvertBSTRToString(O2003_SetConfirmationID(_com_util::ConvertStringToBSTR(getCmdOption(argv, argv + argc, "--SetConfirmationID"))));
+			return 0;
+		}
 		std::cout << _com_util::ConvertBSTRToString(XP_SetConfirmationID(_com_util::ConvertStringToBSTR(getCmdOption(argv, argv + argc, "--SetConfirmationID"))));
 		return 0;
 	}
 
 	else if (cmdOptionExists(argv, argv + argc, "--GetWPALeft")) {
+		if (specifiedProduct != "WindowsNT5x") {
+			std::cout << "An error occurred at specifiedProduct: This command is for Windows management only.";
+			return 0;
+		}
 		std::cout << _com_util::ConvertBSTRToString(XP_GetWPALeft());
 		return 0;
 	}
 	else if (cmdOptionExists(argv, argv + argc, "--GetEvalLeft")) {
+		if (specifiedProduct != "WindowsNT5x") {
+			std::cout << "An error occurred at specifiedProduct: This command is for Windows management only.";
+			return 0;
+		}
 		std::cout << _com_util::ConvertBSTRToString(XP_GetEvalLeft());
 		return 0;
 	}
 
 	else if (cmdOptionExists(argv, argv + argc, "--SetProductKey")) {
+		if (specifiedProduct != "WindowsNT5x") {
+			std::cout << "An error occurred at specifiedProduct: This command is for Windows management only.";
+			return 0;
+		}
 		std::cout << _com_util::ConvertBSTRToString(XP_SetProductKey(convertCharArrayToLPCWSTR(getCmdOption(argv, argv + argc, "--SetProductKey"))));
 		return 0;
 	}
 	else if (cmdOptionExists(argv, argv + argc, "--GetProductID")) {
+		if (specifiedProduct != "WindowsNT5x") {
+			std::cout << "An error occurred at specifiedProduct: This command is for Windows management only.";
+			return 0;
+		}
 		std::cout << _com_util::ConvertBSTRToString(XP_GetProductID());
 		return 0;
 	}
