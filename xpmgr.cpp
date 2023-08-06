@@ -18,17 +18,17 @@ typedef struct IUnknown IUnknown;
 #endif
 #endif
 
-// The magic numbers, interface, and LoadLicenseManager() function was made by diamondggg on MyDigitalLife.
-// LoadLicenseManager() was modified to suit a CLI rather than a GUI.
-// Everything else was either made by TheTank20 or copy pasted from StackOverflow.
+const char* specifiedProduct = NULL;
 
-static CLSID licdllCLSID = { 0xACADF079, 0xCBCD, 0x4032, {0x83, 0xF2, 0xFA, 0x47, 0xC4, 0xDB, 0x09, 0x6F} };
-static IID licenseAgentIID = { 0xB8CBAD79, 0x3F1F, 0x481A, {0xBB, 0x0C, 0xE7, 0xBB, 0xD7, 0x7B, 0xDD, 0xD1} };
-//IID for ICOMLicenseAgent2, with three extra functions
-//static IID licenseAgentIID2 = {0x6A07C5A3, 0x9C67, 0x4BB6, {0xB0, 0x20, 0xEC, 0xBE, 0x7F, 0xDF, 0xD3, 0x26}};
+// This is a really weird way of making a GUID. In short, this becomes ACADF079-CBCD-4032-83F2-FA47C4DB096F. Ignore the 0x and it makes sense.
+static CLSID XP_CLSID = { 0xACADF079, 0xCBCD, 0x4032, {0x83, 0xF2, 0xFA, 0x47, 0xC4, 0xDB, 0x09, 0x6F} };
+static IID XP_IID = { 0xB8CBAD79, 0x3F1F, 0x481A, {0xBB, 0x0C, 0xE7, 0xBB, 0xD7, 0x7B, 0xDD, 0xD1} };
 
-#undef INTERFACE
-#define INTERFACE ICOMLicenseAgent
+static CLSID O2003_CLSID = { 0x000C0114, 0x0000, 0x0000, { 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 } };
+static IID O2003_IID = { 0x00194002, 0xD9C3, 0x11D3, { 0x8D, 0x59, 0x00, 0x50, 0x04, 0x83, 0x84, 0xE3 } };
+
+#undef XP_INTERFACE
+#define XP_INTERFACE ICOMLicenseAgent
 DECLARE_INTERFACE_(ICOMLicenseAgent, IDispatch)
 {
 	/*** IUnknown methods ***/
@@ -97,31 +97,184 @@ DECLARE_INTERFACE_(ICOMLicenseAgent, IDispatch)
 	STDMETHOD(VerifyCheckDigits)(THIS_ BSTR bstrCIDIID, LONG * pbValue) PURE;
 };
 
-static BOOL ComInitialized = FALSE;
-static ICOMLicenseAgent* LicenseAgent = NULL;
-
-static BOOL LoadLicenseManager()
+#undef O2003_INTERFACE
+#define O2003_INTERFACE ILicAgent
+DECLARE_INTERFACE_(ILicAgent, IDispatch)
 {
-	if (!ComInitialized) {
+	/*** IUnknown methods ***/
+	STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID * ppvObj) PURE;
+	STDMETHOD_(ULONG, AddRef)(THIS) PURE;
+	STDMETHOD_(ULONG, Release)(THIS) PURE;
+
+	/*** IDispatch methods ***/
+	STDMETHOD(GetTypeInfoCount)(THIS_ UINT FAR * pctinfo) PURE;
+	STDMETHOD(GetTypeInfo)(THIS_ UINT itinfo, LCID lcid, ITypeInfo FAR * FAR * pptinfo) PURE;
+	STDMETHOD(GetIDsOfNames)(THIS_ REFIID riid, OLECHAR FAR * FAR * rgszNames, UINT cNames, LCID lcid, DISPID FAR * rgdispid) PURE;
+	STDMETHOD(Invoke)(THIS_ DISPID dispidMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS FAR * pdispparams, VARIANT FAR * pvarResult, EXCEPINFO FAR * pexcepinfo, UINT FAR * puArgErr) PURE;
+
+	/*** ILicAgent methods ***/
+	// ChatGPT actually got this right wtf
+	STDMETHOD(Initialize)(THIS_ ULONG dwBPC, ULONG dwMode, BSTR bstrLicSource, ULONG * pdwRetCode) PURE;
+	STDMETHOD(GetFirstName)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetFirstName)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetLastName)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetLastName)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetOrgName)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetOrgName)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetEmail)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetEmail)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetPhone)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetPhone)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetAddress1)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetAddress1)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetCity)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetCity)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetState)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetState)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetCountryCode)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetCountryCode)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetCountryDesc)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetCountryDesc)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetZip)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetZip)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetIsoLanguage)(THIS_ unsigned long* pdwVal) PURE;
+	STDMETHOD(SetIsoLanguage)(THIS_ unsigned long dwNewVal) PURE;
+	STDMETHOD(GetMSUpdate)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetMSUpdate)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetMSOffer)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetMSOffer)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetOtherOffer)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetOtherOffer)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetAddress2)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetAddress2)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(CheckSystemClock)(THIS_ unsigned long* pdwRetCode) PURE;
+	STDMETHOD(GetExistingExpiryDate)(THIS_ DATE * pDateVal) PURE;
+	STDMETHOD(GetNewExpiryDate)(THIS_ DATE * pDateVal) PURE;
+	STDMETHOD(GetBillingFirstName)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetBillingFirstName)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetBillingLastName)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetBillingLastName)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetBillingPhone)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetBillingPhone)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetBillingAddress1)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetBillingAddress1)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetBillingAddress2)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetBillingAddress2)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetBillingCity)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetBillingCity)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetBillingState)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetBillingState)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetBillingCountryCode)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetBillingCountryCode)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(GetBillingZip)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(SetBillingZip)(THIS_ BSTR bstrNewVal) PURE;
+	STDMETHOD(SaveBillingInfo)(THIS_ int bSave, unsigned long* pdwRetVal) PURE;
+	STDMETHOD(IsCCRenewalCountry)(THIS_ BSTR bstrCountryCode, int* pbRetVal) PURE;
+	STDMETHOD(GetVATLabel)(THIS_ BSTR bstrCountryCode, BSTR * pbstrVATLabel) PURE;
+	STDMETHOD(GetCCRenewalExpiryDate)(THIS_ DATE * pDateVal) PURE;
+	STDMETHOD(SetVATNumber)(THIS_ BSTR bstrVATNumber) PURE;
+	STDMETHOD(SetCreditCardType)(THIS_ BSTR bstrCCCode) PURE;
+	STDMETHOD(SetCreditCardNumber)(THIS_ BSTR bstrCCNumber) PURE;
+	STDMETHOD(SetCreditCardExpiryYear)(THIS_ unsigned long dwCCYear) PURE;
+	STDMETHOD(SetCreditCardExpiryMonth)(THIS_ unsigned long dwCCMonth) PURE;
+	STDMETHOD(GetCreditCardCount)(THIS_ unsigned long* pdwCount) PURE;
+	STDMETHOD(GetCreditCardCode)(THIS_ unsigned long dwIndex, BSTR * pbstrCode) PURE;
+	STDMETHOD(GetCreditCardName)(THIS_ unsigned long dwIndex, BSTR * pbstrName) PURE;
+	STDMETHOD(GetVATNumber)(THIS_ BSTR * pbstrVATNumber) PURE;
+	STDMETHOD(GetCreditCardType)(THIS_ BSTR * pbstrCCCode) PURE;
+	STDMETHOD(GetCreditCardNumber)(THIS_ BSTR * pbstrCCNumber) PURE;
+	STDMETHOD(GetCreditCardExpiryYear)(THIS_ unsigned long* pdwCCYear) PURE;
+	STDMETHOD(GetCreditCardExpiryMonth)(THIS_ unsigned long* pdwCCMonth) PURE;
+	STDMETHOD(GetDisconnectOption)(THIS_ int* pbRetVal) PURE;
+	STDMETHOD(SetDisconnectOption)(THIS_ int bNewVal) PURE;
+	STDMETHOD(AsyncProcessHandshakeRequest)(THIS_ int bReviseCustInfo) PURE;
+	STDMETHOD(AsyncProcessNewLicenseRequest)(THIS) PURE;
+	STDMETHOD(AsyncProcessReissueLicenseRequest)(THIS) PURE;
+	STDMETHOD(AsyncProcessRetailRenewalLicenseRequest)(THIS) PURE;
+	STDMETHOD(AsyncProcessReviseCustInfoRequest)(THIS) PURE;
+	STDMETHOD(AsyncProcessCCRenewalPriceRequest)(THIS) PURE;
+	STDMETHOD(AsyncProcessCCRenewalLicenseRequest)(THIS) PURE;
+	STDMETHOD(GetAsyncProcessReturnCode)(THIS_ unsigned long* pdwRetCode) PURE;
+	STDMETHOD(IsUpgradeAvailable)(THIS_ int* pbUpgradeAvailable) PURE;
+	STDMETHOD(WantUpgrade)(THIS_ int bWantUpgrade) PURE;
+	STDMETHOD(AsyncProcessDroppedLicenseRequest)(THIS) PURE;
+	STDMETHOD(GenerateInstallationId)(THIS_ BSTR * pbstrVal) PURE;
+	STDMETHOD(DepositConfirmationId)(THIS_ BSTR bstrVal, unsigned long* pdwRetCode) PURE;
+	STDMETHOD(VerifyCheckDigits)(THIS_ BSTR bstrCIDIID, int* pbValue) PURE;
+	STDMETHOD(GetCurrentExpiryDate)(THIS_ DATE * pDateVal) PURE;
+	STDMETHOD(CancelAsyncProcessRequest)(THIS_ int bIsLicenseRequest) PURE;
+	STDMETHOD(GetCurrencyDescription)(THIS_ unsigned long dwCurrencyIndex, BSTR * pbstrVal) PURE;
+	STDMETHOD(GetPriceItemCount)(THIS_ unsigned long* pdwCount) PURE;
+	STDMETHOD(GetPriceItemLabel)(THIS_ unsigned long dwIndex, BSTR * pbstrVal) PURE;
+	STDMETHOD(GetPriceItemValue)(THIS_ unsigned long dwCurrencyIndex, unsigned long dwIndex, BSTR * pbstrVal) PURE;
+	STDMETHOD(GetInvoiceText)(THIS_ BSTR * pNewVal) PURE;
+	STDMETHOD(GetBackendErrorMsg)(THIS_ BSTR * pbstrErrMsg) PURE;
+	STDMETHOD(GetCurrencyOption)(THIS_ unsigned long* dwCurrencyOption) PURE;
+	STDMETHOD(SetCurrencyOption)(THIS_ unsigned long dwCurrencyOption) PURE;
+	STDMETHOD(GetEndOfLifeHtmlText)(THIS_ BSTR * pbstrHtmlText) PURE;
+	STDMETHOD(DisplaySSLCert)(THIS_ unsigned long* dwRetCode) PURE;
+};
+
+static BOOL XP_ComInitialized = FALSE;
+static ICOMLicenseAgent* XP_LicenseAgent = NULL;
+
+static BOOL O2003_ComInitialized = FALSE;
+static ILicAgent* O2003_LicenseAgent = NULL;
+
+static BOOL XP_LoadLicenseManager()
+{
+	if (!XP_ComInitialized) {
 		HRESULT status = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 		if (FAILED(status)) {
 			std::cout << "An error occurred at CoInitializeEx: ", status;
 			return FALSE;
 		}
-		ComInitialized = TRUE;
+		XP_ComInitialized = TRUE;
 	}
-	if (!LicenseAgent) {
-		HRESULT status = CoCreateInstance(licdllCLSID, NULL, CLSCTX_INPROC_SERVER, licenseAgentIID, (void**)&LicenseAgent);
+	if (!XP_LicenseAgent) {
+		HRESULT status = CoCreateInstance(XP_CLSID, NULL, CLSCTX_INPROC_SERVER, XP_IID, (void**)&XP_LicenseAgent);
 		int good = 0;
 		if (SUCCEEDED(status)) {
 			ULONG dwRetCode;
-			status = LicenseAgent->Initialize(0xC475, 3, 0, &dwRetCode);
+			status = XP_LicenseAgent->Initialize(0xC475, 3, 0, &dwRetCode);
 			if (SUCCEEDED(status) && dwRetCode == 0) {
 				good = 1;
 			}
 			else {
-				LicenseAgent->Release();
-				LicenseAgent = NULL;
+				XP_LicenseAgent->Release();
+				XP_LicenseAgent = NULL;
+			}
+		}
+		if (!good) {
+			std::cout << "An error occurred at CoCreateInstance: " + status;
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static BOOL O2003_LoadLicenseManager()
+{
+	if (!O2003_ComInitialized) {
+		HRESULT status = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+		if (FAILED(status)) {
+			std::cout << "An error occurred at CoInitializeEx: ", status;
+			return FALSE;
+		}
+		O2003_ComInitialized = TRUE;
+	}
+	if (!O2003_LicenseAgent) {
+		HRESULT status = CoCreateInstance(O2003_CLSID, NULL, CLSCTX_INPROC_SERVER, O2003_IID, (void**)&O2003_LicenseAgent);
+		int good = 0;
+		if (SUCCEEDED(status)) {
+			ULONG dwRetCode;
+			status = O2003_LicenseAgent->Initialize(0xC475, 3, 0, &dwRetCode);
+			if (SUCCEEDED(status) && dwRetCode == 0) {
+				good = 1;
+			}
+			else {
+				O2003_LicenseAgent->Release();
+				O2003_LicenseAgent = NULL;
 			}
 		}
 		if (!good) {
@@ -133,6 +286,23 @@ static BOOL LoadLicenseManager()
 }
 
 #pragma region Internals
+bool RegistryKeyExists(HKEY rootKey, const wchar_t* keyPath) {
+	HKEY hKey;
+	LSTATUS result = RegOpenKeyEx(rootKey, keyPath, 0, KEY_READ, &hKey);
+
+	if (result == ERROR_SUCCESS) {
+		RegCloseKey(hKey);
+		return true;
+	}
+	else if (result == ERROR_FILE_NOT_FOUND) {
+		return false;
+	}
+	else {
+		std::cerr << "Error opening registry key. Error code: " << result << std::endl;
+		return false;
+	}
+}
+
 wchar_t* convertCharArrayToLPCWSTR(const char* charArray)
 {
 	wchar_t* wString = new wchar_t[4096];
@@ -264,17 +434,17 @@ bool TerminateProcessByName(const wchar_t* processName)
 
 #pragma endregion
 
-#pragma region ExpirationDate
-static BSTR GetWPALeft() {
-	if (!LoadLicenseManager()) {
-		return SysAllocString(L"An error occurred at LoadLicenseManager: Failed to load");
+#pragma region Windows XP
+static BSTR XP_GetWPALeft() {
+	if (!XP_LoadLicenseManager()) {
+		return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
 	}
 
 	ULONG dwWPALeft = 0, dwEvalLeft = 0;
-	HRESULT status = LicenseAgent->GetExpirationInfo(&dwWPALeft, &dwEvalLeft);
+	HRESULT status = XP_LicenseAgent->GetExpirationInfo(&dwWPALeft, &dwEvalLeft);
 	if (FAILED(status)) {
-		LicenseAgent->Release();
-		LicenseAgent = NULL;
+		XP_LicenseAgent->Release();
+		XP_LicenseAgent = NULL;
 		return SysAllocString(L"An error occurred at GetExpirationInfo: " + status);
 	}
 	if (dwWPALeft == 0x7FFFFFFF) {
@@ -283,16 +453,16 @@ static BSTR GetWPALeft() {
 	return SysAllocString(_bstr_t(dwWPALeft).Detach());
 }
 
-static BSTR GetEvalLeft() {
-	if (!LoadLicenseManager()) {
-		return SysAllocString(L"An error occurred at LoadLicenseManager: Failed to load");
+static BSTR XP_GetEvalLeft() {
+	if (!XP_LoadLicenseManager()) {
+		return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
 	}
 
 	ULONG dwWPALeft = 0, dwEvalLeft = 0;
-	HRESULT status = LicenseAgent->GetExpirationInfo(&dwWPALeft, &dwEvalLeft);
+	HRESULT status = XP_LicenseAgent->GetExpirationInfo(&dwWPALeft, &dwEvalLeft);
 	if (FAILED(status)) {
-		LicenseAgent->Release();
-		LicenseAgent = NULL;
+		XP_LicenseAgent->Release();
+		XP_LicenseAgent = NULL;
 		return SysAllocString(L"An error occurred at GetExpirationInfo: " + status);
 	}
 	if (dwEvalLeft == 0x7FFFFFFF) {
@@ -300,33 +470,30 @@ static BSTR GetEvalLeft() {
 	}
 	return SysAllocString(_bstr_t(dwEvalLeft).Detach());
 }
-#pragma endregion
 
-#pragma region OfflineActivation
-
-static BSTR VerifyCheckDigits(BSTR cidChunk) {
-	if (!LoadLicenseManager()) {
-		return SysAllocString(L"An error occurred at LoadLicenseManager: Failed to load");
+static BSTR XP_VerifyCheckDigits(BSTR cidChunk) {
+	if (!XP_LoadLicenseManager()) {
+		return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
 	}
 
-	if (0 == wcscmp(GetWPALeft(), L"An error occurred at GetWPALeft: Windows is activated")) {
+	if (0 == wcscmp(XP_GetWPALeft(), L"An error occurred at GetWPALeft: Windows is activated")) {
 		return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
 	}
 
 	LONG pbValue;
-	HRESULT status = LicenseAgent->VerifyCheckDigits(cidChunk, &pbValue);
+	HRESULT status = XP_LicenseAgent->VerifyCheckDigits(cidChunk, &pbValue);
 	if (FAILED(status) || !pbValue) {
-		return SysAllocString(L"An error occurred at VerifyCheckDigits: " + pbValue);
+		return SysAllocString(L"An error occurred at XP_VerifyCheckDigits: " + pbValue);
 	}
 	return SysAllocString(L"Successfully verified CID chunk");
 }
 
-static BSTR SetConfirmationID(BSTR confirmationID) {
-	if (!LoadLicenseManager()) {
-		return SysAllocString(L"An error occurred at LoadLicenseManager: Failed to load");
+static BSTR XP_SetConfirmationID(BSTR confirmationID) {
+	if (!XP_LoadLicenseManager()) { 
+		return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
 	}
 
-	if (0 == wcscmp(GetWPALeft(), L"An error occurred at GetWPALeft: Windows is activated")) {
+	if (0 == wcscmp(XP_GetWPALeft(), L"An error occurred at GetWPALeft: Windows is activated")) {
 		return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
 	}
 
@@ -341,18 +508,13 @@ static BSTR SetConfirmationID(BSTR confirmationID) {
 	for (size_t i = 0; i < inputString.length(); i += 6) {
 		std::string substring = inputString.substr(i, 6);
 		const char* cstr = substring.c_str();
-		if (0 != wcscmp(VerifyCheckDigits(_com_util::ConvertStringToBSTR(cstr)), L"Successfully verified CID chunk")) {
-			return SysAllocString(L"An error occurred at VerifyCheckDigits: Check for misspelling");
+		if (0 != wcscmp(XP_VerifyCheckDigits(_com_util::ConvertStringToBSTR(cstr)), L"Successfully verified CID chunk")) {
+			return SysAllocString(L"An error occurred at XP_VerifyCheckDigits: Check for misspelling");
 		}
-
-		free(&cstr);
-		free(&substring);
 	}
 
-	free(&inputString);
-
 	ULONG dwRetCode;
-	HRESULT status = LicenseAgent->DepositConfirmationId(confirmationID, &dwRetCode);
+	HRESULT status = XP_LicenseAgent->DepositConfirmationId(confirmationID, &dwRetCode);
 	if (FAILED(status) || dwRetCode) {
 		return SysAllocString(L"An error occurred at DepositConfirmationId: " + status + dwRetCode);
 	}
@@ -366,17 +528,17 @@ static BSTR SetConfirmationID(BSTR confirmationID) {
 	return SysAllocString(L"Successfully set confirmation ID");
 }
 
-static BSTR GetInstallationID() {
-	if (!LoadLicenseManager()) {
-		return SysAllocString(L"An error occurred at LoadLicenseManager: Failed to load");
+static BSTR XP_GetInstallationID() {
+	if (!XP_LoadLicenseManager()) {
+		return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
 	}
 
-	if (0 == wcscmp(GetWPALeft(), L"An error occurred at GetWPALeft: Windows is activated")) {
+	if (0 == wcscmp(XP_GetWPALeft(), L"An error occurred at GetWPALeft: Windows is activated")) {
 		return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
 	}
 
 	BSTR installationID = NULL;
-	HRESULT status = LicenseAgent->GenerateInstallationId(&installationID);
+	HRESULT status = XP_LicenseAgent->GenerateInstallationId(&installationID);
 	if (FAILED(status) || !installationID) {
 		return SysAllocString(L"An error occurred at GenerateInstallationId: " + status);
 	}
@@ -384,12 +546,10 @@ static BSTR GetInstallationID() {
 		return installationID;
 	}
 }
-#pragma endregion
 
-#pragma region ProductKeyAndID
-static BSTR SetProductKey(LPWSTR productKey) {
-	if (!LoadLicenseManager()) {
-		return SysAllocString(L"An error occurred at LoadLicenseManager: Failed to load");
+static BSTR XP_SetProductKey(LPWSTR productKey) {
+	if (!XP_LoadLicenseManager()) {
+		return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
 	}
 
 	std::wstring ws(productKey);
@@ -400,11 +560,11 @@ static BSTR SetProductKey(LPWSTR productKey) {
 		return SysAllocString(L"An error occurred at regex_match: Product key is invalid");
 	}
 
-	if (0 == wcscmp(GetWPALeft(), L"An error occurred at GetWPALeft: Windows is activated")) {
+	if (0 == wcscmp(XP_GetWPALeft(), L"An error occurred at GetWPALeft: Windows is activated")) {
 		return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
 	}
 
-	HRESULT status = LicenseAgent->SetProductKey(productKey);
+	HRESULT status = XP_LicenseAgent->SetProductKey(productKey);
 	if (FAILED(status)) {
 		return SysAllocString(L"An error occurred at SetProductKey: " + status);
 	}
@@ -413,14 +573,14 @@ static BSTR SetProductKey(LPWSTR productKey) {
 	}
 }
 
-static BSTR GetProductID() {
-	if (!LoadLicenseManager()) {
-		return SysAllocString(L"An error occurred at LoadLicenseManager: Failed to load");
+static BSTR XP_GetProductID() {
+	if (!XP_LoadLicenseManager()) {
+		return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
 	}
 
 	BSTR productID = NULL;
 
-	HRESULT status = LicenseAgent->GetProductID(&productID);
+	HRESULT status = XP_LicenseAgent->GetProductID(&productID);
 	if (FAILED(status)) {
 		return SysAllocString(L"An error occurred at GetProductID: " + status);
 	}
@@ -430,9 +590,77 @@ static BSTR GetProductID() {
 }
 #pragma endregion
 
+#pragma region Office 2003
+static BSTR O2003_VerifyCheckDigits(BSTR cidChunk) {
+	if (!O2003_LoadLicenseManager()) {
+		return SysAllocString(L"An error occurred at O2003_LoadLicenseManager: Failed to load");
+	}
+
+	// TODO: find a way to check office 2003 activation status
+
+	int pbValue;
+	HRESULT status = O2003_LicenseAgent->VerifyCheckDigits(cidChunk, &pbValue);
+	if (FAILED(status) || !pbValue) {
+		return SysAllocString(L"An error occurred at XP_VerifyCheckDigits: " + pbValue);
+	}
+	return SysAllocString(L"Successfully verified CID chunk");
+}
+
+static BSTR O2003_SetConfirmationID(BSTR confirmationID) {
+	if (!O2003_LoadLicenseManager()) {
+		return SysAllocString(L"An error occurred at O2003_LoadLicenseManager: Failed to load");
+	}
+
+	// TODO: find a way to check office 2003 activation status
+
+	int length = SysStringLen(confirmationID);
+	char* str = new char[length + 1];
+	WideCharToMultiByte(CP_UTF8, 0, confirmationID, length, str, length, NULL, NULL);
+	str[length] = '\0';
+
+	std::string inputString(str);
+	inputString.erase(std::remove(inputString.begin(), inputString.end(), '-'), inputString.end()); // remove -'s
+	for (size_t i = 0; i < inputString.length(); i += 6) {
+		std::string substring = inputString.substr(i, 6);
+		const char* cstr = substring.c_str();
+		if (0 != wcscmp(XP_VerifyCheckDigits(_com_util::ConvertStringToBSTR(cstr)), L"Successfully verified CID chunk")) {
+			return SysAllocString(L"An error occurred at XP_VerifyCheckDigits: Check for misspelling");
+		}
+	}
+
+	ULONG dwRetCode;
+	HRESULT status = O2003_LicenseAgent->DepositConfirmationId(confirmationID, &dwRetCode);
+	if (FAILED(status) || dwRetCode) {
+		return SysAllocString(L"An error occurred at DepositConfirmationId: " + status + dwRetCode);
+	}
+
+	return SysAllocString(L"Successfully set confirmation ID");
+}
+
+static BSTR O2003_GetInstallationID() {
+	if (!O2003_LoadLicenseManager()) {
+		return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
+	}
+
+	// TODO: find a way to check office 2003 activation status
+
+	BSTR installationID = NULL;
+	HRESULT status = O2003_LicenseAgent->GenerateInstallationId(&installationID);
+	if (FAILED(status) || !installationID) {
+		return SysAllocString(L"An error occurred at GenerateInstallationId: " + status);
+	}
+	else {
+		return installationID;
+	}
+}
+#pragma endregion
+
+
 int main(int argc, char* argv[])
 {
 	const char* text =
+		"xpmgr - Windows XP License Manager (compiled on " __DATE__ " " __TIME__ ")\n"
+		"\n"
 		"Usage: \n"
 		"--GetInstallationID: Gets the Installation ID\n"
 		"--SetConfirmationID [cid]: Sets Confirmation ID (If successful, activates Windows)\n"
@@ -440,71 +668,104 @@ int main(int argc, char* argv[])
 		"--GetEvalLeft: Gets the days before the evaluation period expires (Eval. copies only)\n"
 		"--SetProductKey [pkey]: Sets/changes product key\n"
 		"--GetProductID: Gets the product ID of Windows\n"
+		"--Office2003: Manages Office 2003 rather than Windows (32-bit xpmgr only)\n"
 		"--GetUsage: Displays this message";
 
-	SYSTEM_INFO systemInfo;
-	GetNativeSystemInfo(&systemInfo);
+	if (cmdOptionExists(argv, argv + argc, "--GetUsage")) {
+		std::cout << text;
+		return 0;
+	}
+
+	if (cmdOptionExists(argv, argv + argc, "--Office2003")) {
 #ifdef ENVIRONMENT32
-	if (systemInfo.wProcessorArchitecture != PROCESSOR_ARCHITECTURE_INTEL) { // running under WOW64
-		if (systemInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) { // is AMD64
-			std::cout << "An error occurred at systemInfo: Incorrect version of xpmgr. You need to download the x64 version.";
+		if (RegistryKeyExists(HKEY_CLASSES_ROOT, L"CLSID\\{000C0114-0000-0000-C000-000000000046}")) {
+			specifiedProduct = "Office2003";
 		}
-		else if (systemInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64) { // is IA64
-			std::cout << "An error occurred at systemInfo: Windows Product Activation does not exist on this platform.";
+		else {
+			std::cout << "An error occurred at RegistryKeyExists: Office 2003 isn't detected (specifically, it's COM Module, responsible for activation).\nPlease (re)install Office 2003, since you wouldn't be able to activate via the GUI anyway.";
+			return 0;
 		}
-		else { // is PPC, megafart 386, whatever else
-			std::cout << "An error occurred at systemInfo: Incorrect version of xpmgr. Go to https://umskt.zulipchat.com if you want to help us make a version for your platform!";
-		}
+	}
+	else {
+		specifiedProduct = "WindowsNT5x";
+	}
+#endif
+#ifdef ENVIRONMENT64
+		std::cout << "An error occurred at ENVIRONMENT64: Please switch to the x86 version of xpmgr to manage Office 2003.";
 		return 0;
 	}
 #endif
 
-	OSVERSIONINFOEX info;
-	ZeroMemory(&info, sizeof(OSVERSIONINFOEX));
-	info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-	GetVersionEx((LPOSVERSIONINFO)&info);
+#ifdef ENVIRONMENT64
+	specifiedProduct = "WindowsNT5x";
+#endif
 
-	if (info.dwMajorVersion != 5) {
-		std::cout << "An error occurred at OSVERSIONINFOEX: This tool only works on Windows NT 5.1 and 5.2.";
-		return 0;
+	if (specifiedProduct == "WindowsNT5x") {
+		SYSTEM_INFO systemInfo;
+		GetNativeSystemInfo(&systemInfo);
+#ifdef ENVIRONMENT32
+		if (systemInfo.wProcessorArchitecture != PROCESSOR_ARCHITECTURE_INTEL) { // running under WOW64
+			if (systemInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) { // is AMD64
+				std::cout << "An error occurred at systemInfo: Incorrect version of xpmgr. You need to download the x64 version.";
+		}
+			else if (systemInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64) { // is IA64
+				std::cout << "An error occurred at systemInfo: Windows Product Activation does not exist on this platform.";
+			}
+			else { // is PPC, megafart 386, whatever else
+				std::cout << "An error occurred at systemInfo: Incorrect version of xpmgr. Go to https://umskt.zulipchat.com if you want to help us make a version for your platform!";
+			}
+			return 0;
 	}
-	else {
-		if (info.dwMinorVersion != 1 && info.dwMinorVersion != 2) {
-			std::cout << "An error occurred OSVERSIONINFOEX: This tool only works on Windows NT 5.1 and 5.2.";
+#endif
+		OSVERSIONINFOEX info;
+		memset(&info, 0, sizeof(OSVERSIONINFOEX));
+		info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+		GetVersionEx((LPOSVERSIONINFO)&info);
+
+		if (info.dwMajorVersion != 5) {
+			std::cout << "An error occurred at OSVERSIONINFOEX: Windows management only works on Windows NT 5.1 and 5.2.";
+			if (info.dwMajorVersion > 5) {
+				std::cout << " Use slmgr instead.";
+				return 0;
+			}
 			return 0;
 		}
+		else {
+			if (info.dwMinorVersion != 1 && info.dwMinorVersion != 2) {
+				if (info.dwMinorVersion == 0) {
+					std::cout << " You should be fine anyways, since Windows 2000 doesn't use Product Activation.";
+					return 0;
+				}
+				std::cout << "An error occurred OSVERSIONINFOEX: Windows management only works on Windows NT 5.1 and 5.2.";
+				return 0;
+			}
+		}
 	}
-	//free(&info);
 
 	if (cmdOptionExists(argv, argv + argc, "--GetInstallationID")) {
-		std::cout << _com_util::ConvertBSTRToString(GetInstallationID());
+		std::cout << _com_util::ConvertBSTRToString(XP_GetInstallationID());
 		return 0;
 	}
 	else if (cmdOptionExists(argv, argv + argc, "--SetConfirmationID")) {
-		std::cout << _com_util::ConvertBSTRToString(SetConfirmationID(_com_util::ConvertStringToBSTR(getCmdOption(argv, argv + argc, "--SetConfirmationID"))));
+		std::cout << _com_util::ConvertBSTRToString(XP_SetConfirmationID(_com_util::ConvertStringToBSTR(getCmdOption(argv, argv + argc, "--SetConfirmationID"))));
 		return 0;
 	}
 
 	else if (cmdOptionExists(argv, argv + argc, "--GetWPALeft")) {
-		std::cout << _com_util::ConvertBSTRToString(GetWPALeft());
+		std::cout << _com_util::ConvertBSTRToString(XP_GetWPALeft());
 		return 0;
 	}
 	else if (cmdOptionExists(argv, argv + argc, "--GetEvalLeft")) {
-		std::cout << _com_util::ConvertBSTRToString(GetEvalLeft());
+		std::cout << _com_util::ConvertBSTRToString(XP_GetEvalLeft());
 		return 0;
 	}
 
 	else if (cmdOptionExists(argv, argv + argc, "--SetProductKey")) {
-		std::cout << _com_util::ConvertBSTRToString(SetProductKey(convertCharArrayToLPCWSTR(getCmdOption(argv, argv + argc, "--SetProductKey"))));
+		std::cout << _com_util::ConvertBSTRToString(XP_SetProductKey(convertCharArrayToLPCWSTR(getCmdOption(argv, argv + argc, "--SetProductKey"))));
 		return 0;
 	}
 	else if (cmdOptionExists(argv, argv + argc, "--GetProductID")) {
-		std::cout << _com_util::ConvertBSTRToString(GetProductID());
-		return 0;
-	}
-
-	else if (cmdOptionExists(argv, argv + argc, "--GetUsage")) {
-		std::cout << text;
+		std::cout << _com_util::ConvertBSTRToString(XP_GetProductID());
 		return 0;
 	}
 	else {
