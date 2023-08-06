@@ -24,6 +24,8 @@ In general, don't use `xpmgr_debug_[arch].exe` unless you have a reason why.
 
 `--GetEvalLeft`: Gets the number of days before the evaluation period expires, in days. In non-evaluation copies of Windows, this should give an error instead.
 
+`--Office2003`: This provides **EXPERIMENTAL** support for Office 2003. When this parameter is used, all other parameters except `--GetInstallationID` and `--SetConfirmationID` are disabled, and those two (attempt) to go what they do on Office 2003, rather than Windows. Most likely, it will crash.
+
 `--GetUsage`: Outputs all the commands you can use.
 
 ## Releases
