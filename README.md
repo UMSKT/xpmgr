@@ -10,6 +10,8 @@ If you have Windows XP Professional x64 Edition or an x64 version of Windows Ser
 
 If you have an Itanium version of Windows XP or Server 2003, Windows Product Activation is not on those editions, so there is no need for this tool.
 
+If you're trying to manage products other than Windows, you need `xpmgr_x86.exe`, regardless of your architecture.
+
 In general, don't use `xpmgr_debug_[arch].exe` unless you have a reason why.
 
 `--GetProductID`: Gets the product ID (ex: `76477-755-3803223-21229`).
@@ -24,7 +26,7 @@ In general, don't use `xpmgr_debug_[arch].exe` unless you have a reason why.
 
 `--GetEvalLeft`: Gets the number of days before the evaluation period expires, in days. In non-evaluation copies of Windows, this should give an error instead.
 
-`--Office2003`: This provides **EXPERIMENTAL** support for Office 2003. When this parameter is used, all other parameters except `--GetInstallationID` and `--SetConfirmationID` are disabled, and those two (attempt) to go what they do on Office 2003, rather than Windows. Most likely, it will crash.
+`--Office2003`: This provides **EXPERIMENTAL** support for Office 2003. When this parameter is used, all other parameters except `--GetInstallationID` and `--SetConfirmationID` are disabled, and those two (attempt) to go what they do on Office 2003, rather than Windows.
 
 `--GetUsage`: Outputs all the commands you can use.
 
