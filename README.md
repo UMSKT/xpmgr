@@ -34,4 +34,13 @@ Use `xpmgr_debug_[arch].exe` if you're encountering an error (or nothing's happe
 https://github.com/UMSKT/xpmgr/releases
 
 ## Building
-Make sure Visual Studio 2017 or later is installed, with the v141_xp toolchain. Then, `git clone`, open in VS, build, done.
+Make sure Visual Studio 2017 or later is installed. Then, install [TDM-GCC](https://jmeubank.github.io/tdm-gcc/about/). Then, run, at the source folder:
+```
+mkdir build
+mkdir build\x86
+mkdir build\x64
+windres icon.rc -O coff -F pe-i386 -o build\x64\icon_x64.res
+g++ -m32 -o build\x86\xpmgr_x86 xpmgr.cpp build\x64\icon_x64.res -lole32 -luuid -loleaut32
+windres icon.rc -O coff -o build\x86\icon_x86.res
+g++ -o build\x64\xpmgr_x64 xpmgr.cpp build\x86\icon_x86.res -lole32 -luuid -loleaut32
+```
