@@ -13,6 +13,19 @@ jobs:
       - name: Checkout Source Tree
         uses: actions/checkout@v3
 
+      - name: Setup TDM-GCC
+        run: |
+          choco install 7zip --version 22.1 -y
+          Invoke-WebRequest -Uri 'https://github.com/jmeubank/tdm-gcc/releases/download/v10.3.0-tdm64-2/tdm64-gcc-10.3.0-2.exe' -OutFile 'C:\Windows\temp\TDM-GCC-64.exe'
+          New-Item -ItemType Directory -Path 'C:\TDM-GCC-64' | Out-Null
+          Start-Process '7z' -ArgumentList 'e C:\Windows\temp\TDM-GCC-64.exe -oC:\TDM-GCC-64 -y' -Wait
+          Start-Process '7z' -ArgumentList 'e C:\TDM-GCC-64\*.tar.xz -oC:\TDM-GCC-64 -y' -Wait
+          Start-Process '7z' -ArgumentList 'x C:\TDM-GCC-64\*.tar -oC:\TDM-GCC-64 -y' -Wait
+          Remove-Item 'C:\TDM-GCC-64\*' -Include *.tar.xz, *.tar -Force
+          $env:PATH = 'C:\TDM-GCC-64\bin;' + $env:PATH
+          [Environment]::SetEnvironmentVariable('PATH', $env:PATH, [EnvironmentVariableTarget]::Machine)
+          Remove-Item -Path 'C:\Windows\temp\TDM-GCC-64.exe' -Force
+        
       - name: Setup folder directories
         run: |
           mkdir build
