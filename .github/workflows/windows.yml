@@ -33,10 +33,10 @@ jobs:
           tree /f D:\a\
 
       - name: Build xpmgr (x86)
-        run: g++ -m32 -o build\x86\xpmgr_x86 xpmgr.cpp -lole32 -luuid -loleaut32
+        run: C:\TDM-GCC-64\bin\g++.exe -m32 -o build\x86\xpmgr_x86 xpmgr.cpp -lole32 -luuid -loleaut32
 
       - name: Build xpmgr (x64)
-        run: g++ -o build\x64\xpmgr_x64 xpmgr.cpp -lole32 -luuid -loleaut32
+        run: C:\TDM-GCC-64\bin\g++.exe -o build\x64\xpmgr_x64 xpmgr.cpp -lole32 -luuid -loleaut32
 
       - name: Upload build artifact (x86)
         uses: actions/upload-artifact@v3.1.2
