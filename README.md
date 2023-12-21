@@ -26,6 +26,8 @@ If you're trying to manage products other than Windows, you need `xpmgr_x86.exe`
 
 `--Office2003`: This provides **EXPERIMENTAL** support for Office 2003. When this parameter is used, all other parameters except `--GetInstallationID` and `--SetConfirmationID` are disabled, and those two (attempt) to go what they do on Office 2003, rather than Windows.
 
+`--BypassInstallCheck`: Disables the check to see if Office 2003 is installed. Intended for debugging purposes only. If it doesn't work without this enabled, it probably won't work with it either.
+
 `--GetUsage`: Outputs all the commands you can use.
 
 ## Releases
@@ -41,4 +43,9 @@ windres icon.rc -F pe-i386 -O coff -o build\x86\icon_x86.res
 g++ -m32 -o build\x86\xpmgr_x86 xpmgr.cpp build\x86\icon_x86.res -lole32 -luuid -loleaut32
 windres icon.rc -O coff -o build\x64\icon_x64.res
 g++ -o build\x64\xpmgr_x64 xpmgr.cpp build\x64\icon_x64.res -lole32 -luuid -loleaut32
+```
+
+Or, if you like one-liners:
+```
+mkdir build & mkdir build\x86 & mkdir build\x64 & windres icon.rc -F pe-i386 -O coff -o build\x86\icon_x86.res & g++ -m32 -o build\x86\xpmgr_x86 xpmgr.cpp build\x86\icon_x86.res -lole32 -luuid -loleaut32 & windres icon.rc -O coff -o build\x64\icon_x64.res & g++ -o build\x64\xpmgr_x64 xpmgr.cpp build\x64\icon_x64.res -lole32 -luuid -loleaut32
 ```
