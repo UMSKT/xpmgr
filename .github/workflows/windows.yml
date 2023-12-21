@@ -23,12 +23,14 @@ jobs:
           Start-Process '7z' -ArgumentList 'x C:\TDM-GCC-64\*.tar -oC:\TDM-GCC-64 -y' -Wait
           $env:PATH = 'C:\TDM-GCC-64\bin;' + $env:PATH
           [Environment]::SetEnvironmentVariable('PATH', $env:PATH, [EnvironmentVariableTarget]::Machine)
+          tree /f C:\TDM-GCC-64
         
       - name: Setup folder directories
         run: |
           mkdir build
           mkdir build\x86
           mkdir build\x64
+          tree /f D:\a\
 
       - name: Build xpmgr (x86)
         run: g++ -m32 -o build\x86\xpmgr_x86 xpmgr.cpp -lole32 -luuid -loleaut32
