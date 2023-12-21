@@ -23,24 +23,22 @@ jobs:
           Start-Process '7z' -ArgumentList 'x C:\TDM-GCC-64\*.tar -oC:\TDM-GCC-64 -y' -Wait
           $env:PATH = 'C:\TDM-GCC-64\bin;' + $env:PATH
           [Environment]::SetEnvironmentVariable('PATH', $env:PATH, [EnvironmentVariableTarget]::Machine)
-          tree /f C:\TDM-GCC-64
         
       - name: Setup folder directories
         run: |
           mkdir build
           mkdir build\x86
           mkdir build\x64
-          tree /f D:\a\
 
       - name: Build xpmgr (x86)
         run: |
-          windres icon.rc -O coff -F pe-i386 -o build\x86\icon_x86.res
-          C:\TDM-GCC-64\bin\g++.exe -m32 -o build\x86\xpmgr_x86 xpmgr.cpp build\x86\icon_x86.res -lole32 -luuid -loleaut32
+          windres icon.rc -O coff -F pe-i386 -o build\x86\icon_x86.res -v
+          C:\TDM-GCC-64\bin\g++.exe -m32 -o build\x86\xpmgr_x86 xpmgr.cpp build\x86\icon_x86.res -lole32 -luuid -loleaut32 -v
 
       - name: Build xpmgr (x64)
         run: |
-          windres icon.rc -O coff -o build\x64\icon_x64.res
-          C:\TDM-GCC-64\bin\g++.exe -o build\x64\xpmgr_x64 xpmgr.cpp build\x64\icon_x64.res -lole32 -luuid -loleaut32
+          windres icon.rc -O coff -o build\x64\icon_x64.res -v
+          C:\TDM-GCC-64\bin\g++.exe -o build\x64\xpmgr_x64 xpmgr.cpp build\x64\icon_x64.res -lole32 -luuid -loleaut32 -v
 
       - name: Upload build artifact (x86)
         uses: actions/upload-artifact@v3.1.2
