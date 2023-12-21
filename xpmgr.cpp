@@ -224,9 +224,9 @@ static BOOL XP_LoadLicenseManager()
 		HRESULT status = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 		if (FAILED(status)) {
             const char* errorString = "An error occurred at CoInitializeEx:";
-            int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+            int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
             char* result = new char[bufferSize + 1];
-            snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+            snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
 			std::cout << result;
 			return FALSE;
 		}
@@ -248,9 +248,9 @@ static BOOL XP_LoadLicenseManager()
 		}
 		if (!good) {
             const char* errorString = "An error occurred at CoCreateInstance:";
-            int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+            int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
             char* result = new char[bufferSize + 1];
-            snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+            snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
             std::cout << result;
 			return FALSE;
 		}
@@ -264,9 +264,9 @@ static BOOL O2003_LoadLicenseManager()
 		HRESULT status = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 		if (FAILED(status)) {
             const char* errorString = "An error occurred at CoInitializeEx:";
-            int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+            int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
             char* result = new char[bufferSize + 1];
-            snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+            snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
             std::cout << result;
 			return FALSE;
 		}
@@ -288,9 +288,9 @@ static BOOL O2003_LoadLicenseManager()
 		}
 		if (!good) {
             const char* errorString = "An error occurred at CoCreateInstance:";
-            int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+            int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
             char* result = new char[bufferSize + 1];
-            snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+            snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
             std::cout << result;
 			return FALSE;
 		}
@@ -500,9 +500,9 @@ static BSTR XP_GetWPALeft() {
 		XP_LicenseAgent->Release();
 		XP_LicenseAgent = NULL;
         const char* errorString = "An error occurred at CoInitializeEx:";
-        int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+        int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
         char* result = new char[bufferSize + 1];
-        snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+        snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
         int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
         OLECHAR* wideResult = new OLECHAR[wideCharSize];
         MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
@@ -525,9 +525,9 @@ static BSTR XP_GetEvalLeft() {
 		XP_LicenseAgent->Release();
 		XP_LicenseAgent = NULL;
         const char* errorString = "An error occurred at GetExpirationInfo:";
-        int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+        int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
         char* result = new char[bufferSize + 1];
-        snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+        snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
         int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
         OLECHAR* wideResult = new OLECHAR[wideCharSize];
         MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
@@ -592,9 +592,9 @@ static BSTR XP_SetConfirmationID(BSTR confirmationID) {
 	HRESULT status = XP_LicenseAgent->DepositConfirmationId(confirmationID, &dwRetCode);
 	if (FAILED(status) || dwRetCode) {
         const char* errorString = "An error occurred at DepositConfirmationId:";
-        int bufferSize = snprintf(nullptr, 0, "%s 0x%081X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
+        int bufferSize = snprintf(nullptr, 0, "%s 0x%08X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
         char* result = new char[bufferSize + 1];
-        snprintf(result, bufferSize + 1, "%s 0x%081X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
+        snprintf(result, bufferSize + 1, "%s 0x%08X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
 
         int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
         OLECHAR* wideResult = new OLECHAR[wideCharSize];
@@ -624,9 +624,9 @@ static BSTR XP_GetInstallationID() {
 	HRESULT status = XP_LicenseAgent->GenerateInstallationId(&installationID);
 	if (FAILED(status) || !installationID) {
         const char* errorString = "An error occurred at GenerateInstallationId:";
-        int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+        int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
         char* result = new char[bufferSize + 1];
-        snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+        snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
         int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
         OLECHAR* wideResult = new OLECHAR[wideCharSize];
         MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
@@ -657,9 +657,9 @@ static BSTR XP_SetProductKey(LPWSTR productKey) {
 	HRESULT status = XP_LicenseAgent->SetProductKey(productKey);
 	if (FAILED(status)) {
         const char* errorString = "An error occurred at SetProductKey:";
-        int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+        int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
         char* result = new char[bufferSize + 1];
-        snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+        snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
         int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
         OLECHAR* wideResult = new OLECHAR[wideCharSize];
         MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
@@ -680,9 +680,9 @@ static BSTR XP_GetProductID() {
 	HRESULT status = XP_LicenseAgent->GetProductID(&productID);
 	if (FAILED(status)) {
         const char* errorString = "An error occurred at GetProductID:";
-        int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+        int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
         char* result = new char[bufferSize + 1];
-        snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+        snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
         int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
         OLECHAR* wideResult = new OLECHAR[wideCharSize];
         MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
@@ -744,9 +744,9 @@ static BSTR O2003_SetConfirmationID(BSTR confirmationID) {
 	HRESULT status = O2003_LicenseAgent->DepositConfirmationId(confirmationID, &dwRetCode);
 	if (FAILED(status) || dwRetCode) {
         const char* errorString = "An error occurred at DepositConfirmationId:";
-        int bufferSize = snprintf(nullptr, 0, "%s 0x%081X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
+        int bufferSize = snprintf(nullptr, 0, "%s 0x%08X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
         char* result = new char[bufferSize + 1];
-        snprintf(result, bufferSize + 1, "%s 0x%081X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
+        snprintf(result, bufferSize + 1, "%s 0x%08X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
         int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
         OLECHAR* wideResult = new OLECHAR[wideCharSize];
         MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
@@ -772,9 +772,9 @@ static BSTR O2003_GetInstallationID() {
 	std::cout << "DEBUG: GenerateInstallationID executed";
 	if (FAILED(status) || !installationID) {
         const char* errorString = "An error occurred at GenerateInstallationId:";
-        int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+        int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
         char* result = new char[bufferSize + 1];
-        snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
+        snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
         int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
         OLECHAR* wideResult = new OLECHAR[wideCharSize];
         MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
