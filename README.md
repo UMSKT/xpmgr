@@ -12,8 +12,6 @@ If you have an Itanium version of Windows XP or Server 2003, Windows Product Act
 
 If you're trying to manage products other than Windows, you need `xpmgr_x86.exe`, regardless of your architecture.
 
-Use `xpmgr_debug_[arch].exe` if you're encountering an error (or nothing's happening). It won't fix the error, but it will give better insight as to why the error's happening.
-
 `--GetProductID`: Gets the product ID (ex: `76477-755-3803223-21229`).
 
 `--SetProductKey`: Sets the product key (tested to work with dashes). If already activated, this should give an error instead.
@@ -34,4 +32,13 @@ Use `xpmgr_debug_[arch].exe` if you're encountering an error (or nothing's happe
 https://github.com/UMSKT/xpmgr/releases
 
 ## Building
-Make sure Visual Studio 2017 or later is installed, with the v141_xp toolchain. Then, `git clone`, open in VS, build, done.
+Make sure Visual Studio 2017 or later is installed. Then, install [TDM-GCC](https://jmeubank.github.io/tdm-gcc/about/). Then, run, at the source folder:
+```
+mkdir build
+mkdir build\x86
+mkdir build\x64
+windres icon.rc -F pe-i386 -O coff -o build\x86\icon_x86.res
+g++ -m32 -o build\x86\xpmgr_x86 xpmgr.cpp build\x86\icon_x86.res -lole32 -luuid -loleaut32
+windres icon.rc -O coff -o build\x64\icon_x64.res
+g++ -o build\x64\xpmgr_x64 xpmgr.cpp build\x64\icon_x64.res -lole32 -luuid -loleaut32
+```
