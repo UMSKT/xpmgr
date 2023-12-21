@@ -223,7 +223,7 @@ static BOOL XP_LoadLicenseManager()
 	if (!XP_ComInitialized) {
 		HRESULT status = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 		if (FAILED(status)) {
-            const char* errorString = "An error occurred at CoInitializeEx: ";
+            const char* errorString = "An error occurred at CoInitializeEx:";
             int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
             char* result = new char[bufferSize + 1];
             snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
@@ -247,7 +247,7 @@ static BOOL XP_LoadLicenseManager()
 			}
 		}
 		if (!good) {
-            const char* errorString = "An error occurred at CoCreateInstance: ";
+            const char* errorString = "An error occurred at CoCreateInstance:";
             int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
             char* result = new char[bufferSize + 1];
             snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
@@ -263,7 +263,7 @@ static BOOL O2003_LoadLicenseManager()
 	if (!O2003_ComInitialized) {
 		HRESULT status = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 		if (FAILED(status)) {
-            const char* errorString = "An error occurred at CoInitializeEx: ";
+            const char* errorString = "An error occurred at CoInitializeEx:";
             int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
             char* result = new char[bufferSize + 1];
             snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
@@ -287,7 +287,7 @@ static BOOL O2003_LoadLicenseManager()
 			}
 		}
 		if (!good) {
-            const char* errorString = "An error occurred at CoCreateInstance: ";
+            const char* errorString = "An error occurred at CoCreateInstance:";
             int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
             char* result = new char[bufferSize + 1];
             snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
@@ -402,7 +402,7 @@ void safeStrncat(char* destination, const char* source, size_t size) {
         strncat(destination, source, size - destLen - 1); // -1 for the null terminator
     } else {
         // Handle buffer overflow error
-        std::cerr << "Error: Buffer overflow during strncat operation." << std::endl;
+        std::cout << "An error occurred at safeStrncat: Buffer overflow during strncat operation." << std::endl;
     }
 }
 #pragma clang diagnostic pop
@@ -412,7 +412,7 @@ bool IsProcessRunning(const wchar_t* processName)
 	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	if (snapshot == INVALID_HANDLE_VALUE)
 	{
-		std::cerr << "Failed to create process snapshot." << std::endl;
+		std::cout << "An error occurred at IsProcessRunning: Failed to create process snapshot." << std::endl;
 		return false;
 	}
 
@@ -421,7 +421,7 @@ bool IsProcessRunning(const wchar_t* processName)
 	if (!Process32FirstW(snapshot, &processEntry))
 	{
 		CloseHandle(snapshot);
-		std::cerr << "Failed to retrieve process information." << std::endl;
+		std::cout << "An error occurred at IsProcessRunning: Failed to retrieve process information." << std::endl;
 		return false;
 	}
 
@@ -499,7 +499,7 @@ static BSTR XP_GetWPALeft() {
 	if (FAILED(status)) {
 		XP_LicenseAgent->Release();
 		XP_LicenseAgent = NULL;
-        const char* errorString = "An error occurred at CoInitializeEx: ";
+        const char* errorString = "An error occurred at CoInitializeEx:";
         int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
         char* result = new char[bufferSize + 1];
         snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
@@ -524,7 +524,7 @@ static BSTR XP_GetEvalLeft() {
 	if (FAILED(status)) {
 		XP_LicenseAgent->Release();
 		XP_LicenseAgent = NULL;
-        const char* errorString = "An error occurred at GetExpirationInfo: ";
+        const char* errorString = "An error occurred at GetExpirationInfo:";
         int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
         char* result = new char[bufferSize + 1];
         snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
@@ -551,7 +551,7 @@ static BSTR XP_VerifyCheckDigits(BSTR cidChunk) {
 	LONG pbValue;
 	HRESULT status = XP_LicenseAgent->VerifyCheckDigits(cidChunk, &pbValue);
 	if (FAILED(status) || !pbValue) {
-        char errorMessage[70] = "An error occurred at XP_VerifyCheckDigits: ";
+        char errorMessage[70] = "An error occurred at XP_VerifyCheckDigits:";
         char pbValueChar[20];
         snprintf(errorMessage, sizeof(errorMessage), "%ld", pbValue);
         safeStrncat(errorMessage, pbValueChar, sizeof(errorMessage));
@@ -591,7 +591,7 @@ static BSTR XP_SetConfirmationID(BSTR confirmationID) {
 	ULONG dwRetCode;
 	HRESULT status = XP_LicenseAgent->DepositConfirmationId(confirmationID, &dwRetCode);
 	if (FAILED(status) || dwRetCode) {
-        const char* errorString = "An error occurred at DepositConfirmationId: ";
+        const char* errorString = "An error occurred at DepositConfirmationId:";
         int bufferSize = snprintf(nullptr, 0, "%s 0x%081X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
         char* result = new char[bufferSize + 1];
         snprintf(result, bufferSize + 1, "%s 0x%081X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
@@ -623,7 +623,7 @@ static BSTR XP_GetInstallationID() {
 	BSTR installationID = NULL;
 	HRESULT status = XP_LicenseAgent->GenerateInstallationId(&installationID);
 	if (FAILED(status) || !installationID) {
-        const char* errorString = "An error occurred at GenerateInstallationId: ";
+        const char* errorString = "An error occurred at GenerateInstallationId:";
         int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
         char* result = new char[bufferSize + 1];
         snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
@@ -656,7 +656,7 @@ static BSTR XP_SetProductKey(LPWSTR productKey) {
 
 	HRESULT status = XP_LicenseAgent->SetProductKey(productKey);
 	if (FAILED(status)) {
-        const char* errorString = "An error occurred at SetProductKey: ";
+        const char* errorString = "An error occurred at SetProductKey:";
         int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
         char* result = new char[bufferSize + 1];
         snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
@@ -679,7 +679,7 @@ static BSTR XP_GetProductID() {
 
 	HRESULT status = XP_LicenseAgent->GetProductID(&productID);
 	if (FAILED(status)) {
-        const char* errorString = "An error occurred at GetProductID: ";
+        const char* errorString = "An error occurred at GetProductID:";
         int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
         char* result = new char[bufferSize + 1];
         snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
@@ -706,7 +706,7 @@ static BSTR O2003_VerifyCheckDigits(BSTR cidChunk) {
 	HRESULT status = O2003_LicenseAgent->VerifyCheckDigits(cidChunk, &pbValue);
 	if (FAILED(status) || !pbValue) {
 
-        wchar_t error[] = L"An error occurred at XP_VerifyCheckDigits: ";
+        wchar_t error[] = L"An error occurred at XP_VerifyCheckDigits:";
         std::wstring numberStr = std::to_wstring(pbValue);
         std::wstring result = error + numberStr;
         wchar_t buffer[100];
@@ -743,7 +743,7 @@ static BSTR O2003_SetConfirmationID(BSTR confirmationID) {
 	ULONG dwRetCode;
 	HRESULT status = O2003_LicenseAgent->DepositConfirmationId(confirmationID, &dwRetCode);
 	if (FAILED(status) || dwRetCode) {
-        const char* errorString = "An error occurred at DepositConfirmationId: ";
+        const char* errorString = "An error occurred at DepositConfirmationId:";
         int bufferSize = snprintf(nullptr, 0, "%s 0x%081X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
         char* result = new char[bufferSize + 1];
         snprintf(result, bufferSize + 1, "%s 0x%081X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
@@ -771,7 +771,7 @@ static BSTR O2003_GetInstallationID() {
 	HRESULT status = O2003_LicenseAgent->GenerateInstallationId(&installationID);
 	std::cout << "DEBUG: GenerateInstallationID executed";
 	if (FAILED(status) || !installationID) {
-        const char* errorString = "An error occurred at GenerateInstallationId: ";
+        const char* errorString = "An error occurred at GenerateInstallationId:";
         int bufferSize = snprintf(nullptr, 0, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
         char* result = new char[bufferSize + 1];
         snprintf(result, bufferSize + 1, "%s 0x%081X", errorString, static_cast<unsigned int>(status));
