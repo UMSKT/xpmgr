@@ -2,12 +2,9 @@ typedef struct IUnknown IUnknown;
 
 #include <windows.h>
 #include <iostream>
-#include <comutil.h>
+#include <comdef.h>
 #include <regex>
 #include <TlHelp32.h>
-
-#pragma comment(lib, "comsuppw.lib")
-#pragma comment(lib, "kernel32.lib")
 
 // Check windows
 #if _WIN32 || _WIN64
@@ -286,7 +283,7 @@ static BOOL O2003_LoadLicenseManager()
 }
 
 #pragma region Internals
-bool RegistryKeyExists(HKEY rootKey, const wchar_t* keyPath) {
+bool RegistryKeyExists(HKEY rootKey, const char* keyPath) {
 	HKEY hKey;
 	LSTATUS result = RegOpenKeyEx(rootKey, keyPath, 0, KEY_READ, &hKey);
 
@@ -351,6 +348,31 @@ OLECHAR SizeToOLECHAR(size_t value)
 	OLECHAR oChar = wideString[0];
 
 	return oChar;
+}
+
+BSTR ConvertToBSTR(const std::string& str) {
+    int size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, NULL, 0);
+    BSTR bstr = SysAllocStringLen(NULL, size - 1);
+    MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, bstr, size);
+    return bstr;
+}
+
+std::string ConvertToStdString(BSTR bstr) {
+    int size = WideCharToMultiByte(CP_UTF8, 0, bstr, -1, NULL, 0, NULL, NULL);
+    char* buffer = new char[size];
+    WideCharToMultiByte(CP_UTF8, 0, bstr, -1, buffer, size, NULL, NULL);
+
+    std::string result(buffer);
+    delete[] buffer;
+
+    return result;
+}
+
+BSTR ConvertCharToBSTR(const char* charString) {
+    int size = MultiByteToWideChar(CP_UTF8, 0, charString, -1, NULL, 0);
+    BSTR bstr = SysAllocStringLen(NULL, size - 1);
+    MultiByteToWideChar(CP_UTF8, 0, charString, -1, bstr, size);
+    return bstr;
 }
 
 bool IsProcessRunning(const wchar_t* processName)
@@ -508,7 +530,7 @@ static BSTR XP_SetConfirmationID(BSTR confirmationID) {
 	for (size_t i = 0; i < inputString.length(); i += 6) {
 		std::string substring = inputString.substr(i, 6);
 		const char* cstr = substring.c_str();
-		if (0 != wcscmp(XP_VerifyCheckDigits(_com_util::ConvertStringToBSTR(cstr)), L"Successfully verified CID chunk")) {
+		if (0 != wcscmp(XP_VerifyCheckDigits(ConvertCharToBSTR(cstr)), L"Successfully verified CID chunk")) {
 			return SysAllocString(L"An error occurred at XP_VerifyCheckDigits: Check for misspelling");
 		}
 	}
@@ -623,7 +645,7 @@ static BSTR O2003_SetConfirmationID(BSTR confirmationID) {
 	for (size_t i = 0; i < inputString.length(); i += 6) {
 		std::string substring = inputString.substr(i, 6);
 		const char* cstr = substring.c_str();
-		if (0 != wcscmp(XP_VerifyCheckDigits(_com_util::ConvertStringToBSTR(cstr)), L"Successfully verified CID chunk")) {
+		if (0 != wcscmp(XP_VerifyCheckDigits(ConvertToBSTR(cstr)), L"Successfully verified CID chunk")) {
 			return SysAllocString(L"An error occurred at XP_VerifyCheckDigits: Check for misspelling");
 		}
 	}
@@ -683,7 +705,7 @@ int main(int argc, char* argv[])
 
 	if (cmdOptionExists(argv, argv + argc, "--Office2003")) {
 #ifdef ENVIRONMENT32
-		if (RegistryKeyExists(HKEY_CLASSES_ROOT, L"CLSID\\{000C0114-0000-0000-C000-000000000046}")) {
+		if (RegistryKeyExists(HKEY_CLASSES_ROOT, "CLSID\\{000C0114-0000-0000-C000-000000000046}")) {
 			specifiedProduct = "Office2003";
 		}
 		else {
@@ -749,18 +771,18 @@ int main(int argc, char* argv[])
 
 	if (cmdOptionExists(argv, argv + argc, "--GetInstallationID")) {
 		if (specifiedProduct == "Office2003") {
-			std::cout << _com_util::ConvertBSTRToString(O2003_GetInstallationID());
+			std::cout << ConvertToStdString(O2003_GetInstallationID());
 			return 0;
 		}
-		std::cout << _com_util::ConvertBSTRToString(XP_GetInstallationID());
+		std::cout << ConvertToStdString(XP_GetInstallationID());
 		return 0;
 	}
 	else if (cmdOptionExists(argv, argv + argc, "--SetConfirmationID")) {
 		if (specifiedProduct == "Office2003") {
-			std::cout << _com_util::ConvertBSTRToString(O2003_SetConfirmationID(_com_util::ConvertStringToBSTR(getCmdOption(argv, argv + argc, "--SetConfirmationID"))));
+			std::cout << ConvertToStdString(O2003_SetConfirmationID(ConvertCharToBSTR(getCmdOption(argv, argv + argc, "--SetConfirmationID"))));
 			return 0;
 		}
-		std::cout << _com_util::ConvertBSTRToString(XP_SetConfirmationID(_com_util::ConvertStringToBSTR(getCmdOption(argv, argv + argc, "--SetConfirmationID"))));
+		std::cout << ConvertToStdString(XP_SetConfirmationID(ConvertCharToBSTR(getCmdOption(argv, argv + argc, "--SetConfirmationID"))));
 		return 0;
 	}
 
@@ -769,7 +791,7 @@ int main(int argc, char* argv[])
 			std::cout << "An error occurred at specifiedProduct: This command is for Windows management only.";
 			return 0;
 		}
-		std::cout << _com_util::ConvertBSTRToString(XP_GetWPALeft());
+		std::cout << ConvertToStdString(XP_GetWPALeft());
 		return 0;
 	}
 	else if (cmdOptionExists(argv, argv + argc, "--GetEvalLeft")) {
@@ -777,7 +799,7 @@ int main(int argc, char* argv[])
 			std::cout << "An error occurred at specifiedProduct: This command is for Windows management only.";
 			return 0;
 		}
-		std::cout << _com_util::ConvertBSTRToString(XP_GetEvalLeft());
+		std::cout << ConvertToStdString(XP_GetEvalLeft());
 		return 0;
 	}
 
@@ -786,7 +808,7 @@ int main(int argc, char* argv[])
 			std::cout << "An error occurred at specifiedProduct: This command is for Windows management only.";
 			return 0;
 		}
-		std::cout << _com_util::ConvertBSTRToString(XP_SetProductKey(convertCharArrayToLPCWSTR(getCmdOption(argv, argv + argc, "--SetProductKey"))));
+		std::cout << ConvertToStdString(XP_SetProductKey(convertCharArrayToLPCWSTR(getCmdOption(argv, argv + argc, "--SetProductKey"))));
 		return 0;
 	}
 	else if (cmdOptionExists(argv, argv + argc, "--GetProductID")) {
@@ -794,7 +816,7 @@ int main(int argc, char* argv[])
 			std::cout << "An error occurred at specifiedProduct: This command is for Windows management only.";
 			return 0;
 		}
-		std::cout << _com_util::ConvertBSTRToString(XP_GetProductID());
+		std::cout << ConvertToStdString(XP_GetProductID());
 		return 0;
 	}
 	else {
@@ -802,5 +824,4 @@ int main(int argc, char* argv[])
 		std::cout << text;
 		return 0;
 	}
-	return 0;
 }

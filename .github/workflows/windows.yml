@@ -10,47 +10,29 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - name: Install Windows XP Support for Visual Studio
-        run: |
-          Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
-          $InstallPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
-          $componentsToAdd = @(
-            "Microsoft.VisualStudio.Component.WinXP"
-          )
-          [string]$workloadArgs = $componentsToAdd | ForEach-Object {" --add " +  $_}
-          $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"",$workloadArgs, '--quiet', '--norestart', '--nocache')
-          $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
-          if ($process.ExitCode -eq 0)
-          {
-              Write-Host "components have been successfully added"
-              Get-ChildItem C:\ProgramData\Microsoft\VisualStudio\Packages\Microsoft.Windows.XPSupport.*
-          }
-          else
-          {
-              Write-Host "components were not installed"
-              exit 1
-          }
-          
       - name: Checkout Source Tree
         uses: actions/checkout@v3
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1
+      - name: Setup folder directories
+        run: |
+          mkdir build
+          mkdir build\x86
+          mkdir build\x64
 
       - name: Build xpmgr (x86)
-        run: msbuild xpmgr.vcxproj /P:Configuration=Release /P:Platform=Win32
+        run: g++ -m32 -o build\x86\xpmgr_x86 xpmgr.cpp -lole32 -luuid -loleaut32
 
       - name: Build xpmgr (x64)
-        run: msbuild xpmgr.vcxproj /P:Configuration=Release /P:Platform=x64
+        run: g++ -o build\x64\xpmgr_x64 xpmgr.cpp -lole32 -luuid -loleaut32
 
       - name: Upload build artifact (x86)
         uses: actions/upload-artifact@v3.1.2
         with:
           name: xpmgr (x86)
-          path: .\Win32\Release
+          path: .\build\x86
           
       - name: Upload build artifact (x64)
         uses: actions/upload-artifact@v3.1.2
         with:
           name: xpmgr (x64)
-          path: .\x64\Release
+          path: .\build\x64
