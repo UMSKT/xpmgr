@@ -12,8 +12,6 @@ If you have an Itanium version of Windows XP or Server 2003, Windows Product Act
 
 If you're trying to manage products other than Windows, you need `xpmgr_x86.exe`, regardless of your architecture.
 
-Use `xpmgr_debug_[arch].exe` if you're encountering an error (or nothing's happening). It won't fix the error, but it will give better insight as to why the error's happening.
-
 `--GetProductID`: Gets the product ID (ex: `76477-755-3803223-21229`).
 
 `--SetProductKey`: Sets the product key (tested to work with dashes). If already activated, this should give an error instead.
