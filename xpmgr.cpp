@@ -1,3 +1,4 @@
+// ReSharper disable CppEnforceOverridingFunctionStyle
 typedef struct IUnknown IUnknown;
 
 #include <windows.h>
@@ -15,23 +16,28 @@ typedef struct IUnknown IUnknown;
 #endif
 #endif
 
-const char* specifiedProduct = NULL;
+const char* specifiedProduct = nullptr;
 
 // This is a really weird way of making a GUID. In short, this becomes ACADF079-CBCD-4032-83F2-FA47C4DB096F. Ignore the 0x and it makes sense.
 static CLSID XP_CLSID = { 0xACADF079, 0xCBCD, 0x4032, {0x83, 0xF2, 0xFA, 0x47, 0xC4, 0xDB, 0x09, 0x6F} };
-static IID XP_IID = { 0xB8CBAD79, 0x3F1F, 0x481A, {0xBB, 0x0C, 0xE7, 0xBB, 0xD7, 0x7B, 0xDD, 0xD1} };
+static IID XP_IID = { 0xB8CBAD79, 0x3F1F, 0x481A, { 0xBB, 0x0C, 0xE7, 0xBB, 0xD7, 0x7B, 0xDD, 0xD1 } };
 
-static CLSID O2003_CLSID = { 0x2DF8D04C, 0x5BFA, 0x101B, { 0xBD, 0xE5, 0x00, 0xAA, 0x00, 0x44, 0xDE, 0x52 } };
-static IID O2003_IID = { 0x00194002, 0xD9C3, 0x11D3, { 0x8D, 0x59, 0x00, 0x50, 0x04, 0x83, 0x84, 0xE3 } };
+static CLSID O2003_CLSID = { 0x812034D2, 0x760F, 0x11CF, { 0x93, 0x70, 0x00, 0xAA, 0x00, 0xB8, 0xBF, 0x00 } };
+static IID O2003_IID = { 0x00194002, 0xD9C3, 0x11D3, {  0x8D, 0x59, 0x00, 0x50, 0x04, 0x83, 0x84, 0xE3 } };
 
 #undef XP_INTERFACE
 #define XP_INTERFACE ICOMLicenseAgent
 DECLARE_INTERFACE_(ICOMLicenseAgent, IDispatch)
 {
+protected:
+	~ICOMLicenseAgent() = default;
+
+public:
+
 	/*** IUnknown methods ***/
 	STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID * ppvObj) PURE;
-	STDMETHOD_(ULONG, AddRef)(THIS) PURE;
-	STDMETHOD_(ULONG, Release)(THIS) PURE;
+	STDMETHOD_(ULONG, AddRef)() PURE;
+	STDMETHOD_(ULONG, Release)() PURE;
 
 	/*** IDispatch methods ***/
 	STDMETHOD(GetTypeInfoCount)(THIS_ UINT FAR * pctinfo) PURE;
@@ -74,21 +80,21 @@ DECLARE_INTERFACE_(ICOMLicenseAgent, IDispatch)
 	STDMETHOD(GetAddress2)(THIS_ BSTR * pbstrVal) PURE;
 	STDMETHOD(SetAddress2)(THIS_ BSTR bstrNewVal) PURE;
 	STDMETHOD(AsyncProcessHandshakeRequest)(THIS_ LONG bReviseCustInfo) PURE;
-	STDMETHOD(AsyncProcessNewLicenseRequest)(THIS) PURE;
-	STDMETHOD(AsyncProcessReissueLicenseRequest)(THIS) PURE;
-	STDMETHOD(AsyncProcessReviseCustInfoRequest)(THIS) PURE;
+	STDMETHOD(AsyncProcessNewLicenseRequest)() PURE;
+	STDMETHOD(AsyncProcessReissueLicenseRequest)() PURE;
+	STDMETHOD(AsyncProcessReviseCustInfoRequest)() PURE;
 	STDMETHOD(GetAsyncProcessReturnCode)(THIS_ ULONG * pdwRetCode) PURE;
-	STDMETHOD(AsyncProcessDroppedLicenseRequest)(THIS) PURE; 
+	STDMETHOD(AsyncProcessDroppedLicenseRequest)() PURE;
 	STDMETHOD(GenerateInstallationId)(THIS_ BSTR * pbstrVal) PURE;
 	STDMETHOD(DepositConfirmationId)(THIS_ BSTR bstrVal, ULONG * pdwRetCode) PURE;
 	STDMETHOD(GetExpirationInfo)(THIS_ ULONG * pdwWPALeft, ULONG * pdwEvalLeft) PURE;
-	STDMETHOD(AsyncProcessRegistrationRequest)(THIS) PURE;
+	STDMETHOD(AsyncProcessRegistrationRequest)() PURE;
 	STDMETHOD(ProcessHandshakeRequest)(THIS_ LONG bReviseCustInfo) PURE;
-	STDMETHOD(ProcessNewLicenseRequest)(THIS) PURE;
-	STDMETHOD(ProcessDroppedLicenseRequest)(THIS) PURE;
-	STDMETHOD(ProcessReissueLicenseRequest)(THIS) PURE;
-	STDMETHOD(ProcessReviseCustInfoRequest)(THIS) PURE;
-	STDMETHOD(EnsureInternetConnection)(THIS) PURE;
+	STDMETHOD(ProcessNewLicenseRequest)() PURE;
+	STDMETHOD(ProcessDroppedLicenseRequest)() PURE;
+	STDMETHOD(ProcessReissueLicenseRequest)() PURE;
+	STDMETHOD(ProcessReviseCustInfoRequest)() PURE;
+	STDMETHOD(EnsureInternetConnection)() PURE;
 	STDMETHOD(SetProductKey)(THIS_ LPWSTR pszNewProductKey) PURE;
 	STDMETHOD(GetProductID)(THIS_ BSTR * pbstrVal) PURE;
 	STDMETHOD(VerifyCheckDigits)(THIS_ BSTR bstrCIDIID, LONG * pbValue) PURE;
@@ -98,10 +104,14 @@ DECLARE_INTERFACE_(ICOMLicenseAgent, IDispatch)
 #define O2003_INTERFACE ILicAgent
 DECLARE_INTERFACE_(ILicAgent, IDispatch)
 {
+protected:
+	~ILicAgent() = default;
+
+public:
 	/*** IUnknown methods ***/
 	STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID * ppvObj) PURE;
-	STDMETHOD_(ULONG, AddRef)(THIS) PURE;
-	STDMETHOD_(ULONG, Release)(THIS) PURE;
+	STDMETHOD_(ULONG, AddRef)() PURE;
+	STDMETHOD_(ULONG, Release)() PURE;
 
 	/*** IDispatch methods ***/
 	STDMETHOD(GetTypeInfoCount)(THIS_ UINT FAR * pctinfo) PURE;
@@ -185,16 +195,16 @@ DECLARE_INTERFACE_(ILicAgent, IDispatch)
 	STDMETHOD(GetDisconnectOption)(THIS_ int* pbRetVal) PURE;
 	STDMETHOD(SetDisconnectOption)(THIS_ int bNewVal) PURE;
 	STDMETHOD(AsyncProcessHandshakeRequest)(THIS_ int bReviseCustInfo) PURE;
-	STDMETHOD(AsyncProcessNewLicenseRequest)(THIS) PURE;
-	STDMETHOD(AsyncProcessReissueLicenseRequest)(THIS) PURE;
-	STDMETHOD(AsyncProcessRetailRenewalLicenseRequest)(THIS) PURE;
-	STDMETHOD(AsyncProcessReviseCustInfoRequest)(THIS) PURE;
-	STDMETHOD(AsyncProcessCCRenewalPriceRequest)(THIS) PURE;
-	STDMETHOD(AsyncProcessCCRenewalLicenseRequest)(THIS) PURE;
+	STDMETHOD(AsyncProcessNewLicenseRequest)() PURE;
+	STDMETHOD(AsyncProcessReissueLicenseRequest)() PURE;
+	STDMETHOD(AsyncProcessRetailRenewalLicenseRequest)() PURE;
+	STDMETHOD(AsyncProcessReviseCustInfoRequest)() PURE;
+	STDMETHOD(AsyncProcessCCRenewalPriceRequest)() PURE;
+	STDMETHOD(AsyncProcessCCRenewalLicenseRequest)() PURE;
 	STDMETHOD(GetAsyncProcessReturnCode)(THIS_ unsigned long* pdwRetCode) PURE;
 	STDMETHOD(IsUpgradeAvailable)(THIS_ int* pbUpgradeAvailable) PURE;
 	STDMETHOD(WantUpgrade)(THIS_ int bWantUpgrade) PURE;
-	STDMETHOD(AsyncProcessDroppedLicenseRequest)(THIS) PURE;
+	STDMETHOD(AsyncProcessDroppedLicenseRequest)() PURE;
 	STDMETHOD(GenerateInstallationId)(THIS_ BSTR * pbstrVal) PURE;
 	STDMETHOD(DepositConfirmationId)(THIS_ BSTR bstrVal, unsigned long* pdwRetCode) PURE;
 	STDMETHOD(VerifyCheckDigits)(THIS_ BSTR bstrCIDIID, int* pbValue) PURE;
@@ -213,44 +223,44 @@ DECLARE_INTERFACE_(ILicAgent, IDispatch)
 };
 
 static BOOL XP_ComInitialized = FALSE;
-static ICOMLicenseAgent* XP_LicenseAgent = NULL;
+static ICOMLicenseAgent* XP_LicenseAgent = nullptr;
 
 static BOOL O2003_ComInitialized = FALSE;
-static ILicAgent* O2003_LicenseAgent = NULL;
+static ILicAgent* O2003_LicenseAgent = nullptr;
 
 static BOOL XP_LoadLicenseManager()
 {
 	if (!XP_ComInitialized) {
-		HRESULT status = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+		const HRESULT status = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 		if (FAILED(status)) {
             const char* errorString = "An error occurred at CoInitializeEx:";
-            int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
+            const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X\n", errorString, static_cast<unsigned int>(status));
             char* result = new char[bufferSize + 1];
-            snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
+            snprintf(result, bufferSize + 1, "%s 0x%08X\n", errorString, static_cast<unsigned int>(status));
 			std::cout << result;
 			return FALSE;
 		}
 		XP_ComInitialized = TRUE;
 	}
 	if (!XP_LicenseAgent) {
-		HRESULT status = CoCreateInstance(XP_CLSID, NULL, CLSCTX_INPROC_SERVER, XP_IID, (void**)&XP_LicenseAgent);
+		HRESULT status = CoCreateInstance(XP_CLSID, nullptr, CLSCTX_INPROC_SERVER, XP_IID, reinterpret_cast<void **>(&XP_LicenseAgent));
 		int good = 0;
 		if (SUCCEEDED(status)) {
 			ULONG dwRetCode;
-			status = XP_LicenseAgent->Initialize(0xC475 /* This needs to be changed, I believe it's causing the crashing.*/ , 3, 0, &dwRetCode);
+			status = XP_LicenseAgent->Initialize(0xC475 /* This needs to be changed, I believe it's causing the crashing.*/ , 3, nullptr, &dwRetCode);
 			if (SUCCEEDED(status) && dwRetCode == 0) {
 				good = 1;
 			}
 			else {
 				XP_LicenseAgent->Release();
-				XP_LicenseAgent = NULL;
+				XP_LicenseAgent = nullptr;
 			}
 		}
 		if (!good) {
             const char* errorString = "An error occurred at CoCreateInstance:";
-            int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
+            const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X\n", errorString, static_cast<unsigned int>(status));
             char* result = new char[bufferSize + 1];
-            snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
+            snprintf(result, bufferSize + 1, "%s 0x%08X\n", errorString, static_cast<unsigned int>(status));
             std::cout << result;
 			return FALSE;
 		}
@@ -261,36 +271,41 @@ static BOOL XP_LoadLicenseManager()
 static BOOL O2003_LoadLicenseManager()
 {
 	if (!O2003_ComInitialized) {
-		HRESULT status = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+		const HRESULT status = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 		if (FAILED(status)) {
             const char* errorString = "An error occurred at CoInitializeEx:";
-            int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
+            const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X\n", errorString, static_cast<unsigned int>(status));
             char* result = new char[bufferSize + 1];
-            snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
+            snprintf(result, bufferSize + 1, "%s 0x%08X\n", errorString, static_cast<unsigned int>(status));
             std::cout << result;
 			return FALSE;
 		}
 		O2003_ComInitialized = TRUE;
 	}
 	if (!O2003_LicenseAgent) {
-		HRESULT status = CoCreateInstance(O2003_CLSID, NULL, CLSCTX_INPROC_SERVER, O2003_IID, (void**)&O2003_LicenseAgent);
+		HRESULT status = CoCreateInstance(O2003_CLSID, nullptr, CLSCTX_INPROC_SERVER, O2003_IID, reinterpret_cast<void **>(&O2003_LicenseAgent));
 		int good = 0;
 		if (SUCCEEDED(status)) {
 			ULONG dwRetCode;
-			status = O2003_LicenseAgent->Initialize(0xC475, 3, 0, &dwRetCode);
+			status = O2003_LicenseAgent->Initialize(0xC475, 3, nullptr, &dwRetCode);
 			if (SUCCEEDED(status) && dwRetCode == 0) {
 				good = 1;
 			}
 			else {
 				O2003_LicenseAgent->Release();
-				O2003_LicenseAgent = NULL;
+				O2003_LicenseAgent = nullptr;
+				const auto errorString = "An error occurred at Initialize:";
+				const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X, %z\n", errorString, static_cast<unsigned int>(status), dwRetCode);
+				const auto result = new char[bufferSize + 1];
+				snprintf(result, bufferSize + 1, "%s 0x%08X, %z\n", errorString, static_cast<unsigned int>(status), dwRetCode);
+				std::cout << result;
 			}
 		}
 		if (!good) {
-            const char* errorString = "An error occurred at CoCreateInstance:";
-            int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
-            char* result = new char[bufferSize + 1];
-            snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
+			const auto errorString = "An error occurred at CoCreateInstance:";
+            const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X\n", errorString, static_cast<unsigned int>(status));
+            const auto result = new char[bufferSize + 1];
+            snprintf(result, bufferSize + 1, "%s 0x%08X\n", errorString, static_cast<unsigned int>(status));
             std::cout << result;
 			return FALSE;
 		}
@@ -301,7 +316,7 @@ static BOOL O2003_LoadLicenseManager()
 #pragma region Internals
 bool RegistryKeyExists(HKEY rootKey, const char* keyPath) {
 	HKEY hKey;
-	LSTATUS result = RegOpenKeyEx(rootKey, keyPath, 0, KEY_READ, &hKey);
+	const LSTATUS result = RegOpenKeyEx(rootKey, keyPath, 0, KEY_READ, &hKey);
 
 	if (result == ERROR_SUCCESS) {
 		RegCloseKey(hKey);
@@ -318,7 +333,7 @@ bool RegistryKeyExists(HKEY rootKey, const char* keyPath) {
 
 wchar_t* convertCharArrayToLPCWSTR(const char* charArray)
 {
-	wchar_t* wString = new wchar_t[4096];
+	auto* wString = new wchar_t[4096];
 	MultiByteToWideChar(CP_ACP, 0, charArray, -1, wString, 4096);
 	return wString;
 }
@@ -330,7 +345,7 @@ char* getCmdOption(char** begin, char** end, const std::string& option)
 	{
 		return *itr;
 	}
-	return 0;
+	return nullptr;
 }
 
 bool cmdOptionExists(char** begin, char** end, const std::string& option)
@@ -340,10 +355,10 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 
 char* BstrToChar(BSTR bstr)
 {
-	int len = ::SysStringLen(bstr);
-	int bufSize = ::WideCharToMultiByte(CP_UTF8, 0, bstr, len, NULL, 0, NULL, NULL);
-	char* buffer = new char[bufSize + 1];
-	::WideCharToMultiByte(CP_UTF8, 0, bstr, len, buffer, bufSize, NULL, NULL);
+	const int len = static_cast<int>(::SysStringLen(bstr));
+	const int bufSize = ::WideCharToMultiByte(CP_UTF8, 0, bstr, len, nullptr, 0, nullptr, nullptr);
+	const auto buffer = new char[bufSize + 1];
+	::WideCharToMultiByte(CP_UTF8, 0, bstr, len, buffer, bufSize, nullptr, nullptr);
 	buffer[bufSize] = '\0';
 	return buffer;
 }
@@ -351,32 +366,33 @@ char* BstrToChar(BSTR bstr)
 ULONG ConvertToULONG(const char* str)
 {
 	char* end;
-	ULONG value = std::strtoul(str, &end, 10);
+	const ULONG value = std::strtoul(str, &end, 10);
 	return value;
 }
 
 OLECHAR SizeToOLECHAR(size_t value)
 {
 	// Convert size_t to wstring
-	std::wstring wideString = std::to_wstring(value);
+	const std::wstring wideString = std::to_wstring(value);
 
 	// Retrieve the first character from the wide string
-	OLECHAR oChar = wideString[0];
+	const OLECHAR oChar = wideString[0];
 
 	return oChar;
 }
 
 BSTR ConvertToBSTR(const std::string& str) {
-    int size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, NULL, 0);
-    BSTR bstr = SysAllocStringLen(NULL, size - 1);
+	const int size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, nullptr, 0);
+	// ReSharper disable once CppLocalVariableMayBeConst
+	BSTR bstr = SysAllocStringLen(nullptr, size - 1);
     MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, bstr, size);
     return bstr;
 }
 
 std::string ConvertToStdString(BSTR bstr) {
-    int size = WideCharToMultiByte(CP_UTF8, 0, bstr, -1, NULL, 0, NULL, NULL);
-    char* buffer = new char[size];
-    WideCharToMultiByte(CP_UTF8, 0, bstr, -1, buffer, size, NULL, NULL);
+    const int size = WideCharToMultiByte(CP_UTF8, 0, bstr, -1, nullptr, 0, nullptr, nullptr);
+    const auto buffer = new char[size];
+    WideCharToMultiByte(CP_UTF8, 0, bstr, -1, buffer, size, nullptr, nullptr);
 
     std::string result(buffer);
     delete[] buffer;
@@ -385,8 +401,9 @@ std::string ConvertToStdString(BSTR bstr) {
 }
 
 BSTR ConvertCharToBSTR(const char* charString) {
-    int size = MultiByteToWideChar(CP_UTF8, 0, charString, -1, NULL, 0);
-    BSTR bstr = SysAllocStringLen(NULL, size - 1);
+    const int size = MultiByteToWideChar(CP_UTF8, 0, charString, -1, nullptr, 0);
+    // ReSharper disable once CppLocalVariableMayBeConst
+    BSTR bstr = SysAllocStringLen(nullptr, size - 1);
     MultiByteToWideChar(CP_UTF8, 0, charString, -1, bstr, size);
     return bstr;
 }
@@ -394,8 +411,8 @@ BSTR ConvertCharToBSTR(const char* charString) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 void safeStrncat(char* destination, const char* source, size_t size) {
-    size_t destLen = strlen(destination);
-    size_t srcLen = strlen(source);
+    const size_t destLen = strlen(destination);
+    const size_t srcLen = strlen(source);
 
     if (destLen + srcLen < size) {
         // fuck off Microsoft
@@ -409,6 +426,7 @@ void safeStrncat(char* destination, const char* source, size_t size) {
 
 bool IsProcessRunning(const wchar_t* processName)
 {
+	// ReSharper disable once CppLocalVariableMayBeConst
 	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	if (snapshot == INVALID_HANDLE_VALUE)
 	{
@@ -440,6 +458,7 @@ bool IsProcessRunning(const wchar_t* processName)
 
 bool TerminateProcessByName(const wchar_t* processName)
 {
+	// ReSharper disable once CppLocalVariableMayBeConst
 	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	if (snapshot == INVALID_HANDLE_VALUE)
 	{
@@ -458,8 +477,9 @@ bool TerminateProcessByName(const wchar_t* processName)
 	{
 		if (wcscmp(processEntry.szExeFile, processName) == 0)
 		{
+			// ReSharper disable once CppLocalVariableMayBeConst
 			HANDLE processHandle = OpenProcess(PROCESS_TERMINATE, FALSE, processEntry.th32ProcessID);
-			if (processHandle != NULL)
+			if (processHandle != nullptr)
 			{
 				if (TerminateProcess(processHandle, 0))
 				{
@@ -495,16 +515,16 @@ static BSTR XP_GetWPALeft() {
 	}
 
 	ULONG dwWPALeft = 0, dwEvalLeft = 0;
-	HRESULT status = XP_LicenseAgent->GetExpirationInfo(&dwWPALeft, &dwEvalLeft);
+	const HRESULT status = XP_LicenseAgent->GetExpirationInfo(&dwWPALeft, &dwEvalLeft);
 	if (FAILED(status)) {
 		XP_LicenseAgent->Release();
-		XP_LicenseAgent = NULL;
+		XP_LicenseAgent = nullptr;
         const char* errorString = "An error occurred at CoInitializeEx:";
-        int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
+		const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
         char* result = new char[bufferSize + 1];
         snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
-        int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
-        OLECHAR* wideResult = new OLECHAR[wideCharSize];
+		const int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
+        auto* wideResult = new OLECHAR[wideCharSize];
         MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
 		return SysAllocString(wideResult);
 	}
@@ -520,16 +540,16 @@ static BSTR XP_GetEvalLeft() {
 	}
 
 	ULONG dwWPALeft = 0, dwEvalLeft = 0;
-	HRESULT status = XP_LicenseAgent->GetExpirationInfo(&dwWPALeft, &dwEvalLeft);
+	const HRESULT status = XP_LicenseAgent->GetExpirationInfo(&dwWPALeft, &dwEvalLeft);
 	if (FAILED(status)) {
 		XP_LicenseAgent->Release();
-		XP_LicenseAgent = NULL;
+		XP_LicenseAgent = nullptr;
         const char* errorString = "An error occurred at GetExpirationInfo:";
-        int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
+		const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
         char* result = new char[bufferSize + 1];
         snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
-        int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
-        OLECHAR* wideResult = new OLECHAR[wideCharSize];
+		const int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
+        auto* wideResult = new OLECHAR[wideCharSize];
         MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
         return SysAllocString(wideResult);
 	}
@@ -549,14 +569,14 @@ static BSTR XP_VerifyCheckDigits(BSTR cidChunk) {
 	}
 
 	LONG pbValue;
-	HRESULT status = XP_LicenseAgent->VerifyCheckDigits(cidChunk, &pbValue);
+	const HRESULT status = XP_LicenseAgent->VerifyCheckDigits(cidChunk, &pbValue);
 	if (FAILED(status) || !pbValue) {
         char errorMessage[70] = "An error occurred at XP_VerifyCheckDigits:";
         char pbValueChar[20];
         snprintf(errorMessage, sizeof(errorMessage), "%ld", pbValue);
         safeStrncat(errorMessage, pbValueChar, sizeof(errorMessage));
-        int len = MultiByteToWideChar(CP_UTF8, 0, errorMessage, -1, NULL, 0);
-        OLECHAR* oleCharString = new OLECHAR[len];
+        const int len = MultiByteToWideChar(CP_UTF8, 0, errorMessage, -1, nullptr, 0);
+        auto* oleCharString = new OLECHAR[len];
         MultiByteToWideChar(CP_UTF8, 0, errorMessage, -1, oleCharString, len);
 		return SysAllocString(oleCharString);
 	}
@@ -572,10 +592,9 @@ static BSTR XP_SetConfirmationID(BSTR confirmationID) {
 		return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
 	}
 
-	// 
-	int length = SysStringLen(confirmationID);
+	const int length = static_cast<int>(SysStringLen(confirmationID));
 	char* str = new char[length + 1];
-	WideCharToMultiByte(CP_UTF8, 0, confirmationID, length, str, length, NULL, NULL);
+	WideCharToMultiByte(CP_UTF8, 0, confirmationID, length, str, length, nullptr, nullptr);
 	str[length] = '\0';
 
 	std::string inputString(str);
@@ -589,15 +608,15 @@ static BSTR XP_SetConfirmationID(BSTR confirmationID) {
 	}
 
 	ULONG dwRetCode;
-	HRESULT status = XP_LicenseAgent->DepositConfirmationId(confirmationID, &dwRetCode);
+	const HRESULT status = XP_LicenseAgent->DepositConfirmationId(confirmationID, &dwRetCode);
 	if (FAILED(status) || dwRetCode) {
         const char* errorString = "An error occurred at DepositConfirmationId:";
-        int bufferSize = snprintf(nullptr, 0, "%s 0x%08X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
+        const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
         char* result = new char[bufferSize + 1];
         snprintf(result, bufferSize + 1, "%s 0x%08X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
 
-        int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
-        OLECHAR* wideResult = new OLECHAR[wideCharSize];
+        const int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
+        auto* wideResult = new OLECHAR[wideCharSize];
         MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
         return SysAllocString(wideResult);
 	}
@@ -615,20 +634,19 @@ static BSTR XP_GetInstallationID() {
 	if (!XP_LoadLicenseManager()) {
 		return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
 	}
-
 	if (0 == wcscmp(XP_GetWPALeft(), L"An error occurred at GetWPALeft: Windows is activated")) {
 		return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
 	}
 
-	BSTR installationID = NULL;
-	HRESULT status = XP_LicenseAgent->GenerateInstallationId(&installationID);
+	BSTR installationID = nullptr;
+	const HRESULT status = XP_LicenseAgent->GenerateInstallationId(&installationID);
 	if (FAILED(status) || !installationID) {
         const char* errorString = "An error occurred at GenerateInstallationId:";
-        int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
+        const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
         char* result = new char[bufferSize + 1];
         snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
-        int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
-        OLECHAR* wideResult = new OLECHAR[wideCharSize];
+        const int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
+        auto* wideResult = new OLECHAR[wideCharSize];
         MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
         return SysAllocString(wideResult);
 	}
@@ -643,8 +661,8 @@ static BSTR XP_SetProductKey(LPWSTR productKey) {
 	}
 
 	std::wstring ws(productKey);
-	std::string productKeyToRegex = std::string(ws.begin(), ws.end());
-	std::regex pattern("[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}");
+	const std::string productKeyToRegex = std::string(ws.begin(), ws.end());
+	const std::regex pattern("[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}");
 
 	if (!std::regex_match(productKeyToRegex, pattern)) {
 		return SysAllocString(L"An error occurred at regex_match: Product key is invalid");
@@ -654,14 +672,14 @@ static BSTR XP_SetProductKey(LPWSTR productKey) {
 		return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
 	}
 
-	HRESULT status = XP_LicenseAgent->SetProductKey(productKey);
+	const HRESULT status = XP_LicenseAgent->SetProductKey(productKey);
 	if (FAILED(status)) {
         const char* errorString = "An error occurred at SetProductKey:";
-        int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
+        const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
         char* result = new char[bufferSize + 1];
         snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
-        int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
-        OLECHAR* wideResult = new OLECHAR[wideCharSize];
+        const int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
+        auto* wideResult = new OLECHAR[wideCharSize];
         MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
         return SysAllocString(wideResult);
 	}
@@ -675,16 +693,16 @@ static BSTR XP_GetProductID() {
 		return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
 	}
 
-	BSTR productID = NULL;
+	BSTR productID = nullptr;
 
-	HRESULT status = XP_LicenseAgent->GetProductID(&productID);
+	const HRESULT status = XP_LicenseAgent->GetProductID(&productID);
 	if (FAILED(status)) {
         const char* errorString = "An error occurred at GetProductID:";
-        int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
+        const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
         char* result = new char[bufferSize + 1];
         snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
-        int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
-        OLECHAR* wideResult = new OLECHAR[wideCharSize];
+        const int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
+        auto* wideResult = new OLECHAR[wideCharSize];
         MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
         return SysAllocString(wideResult);
 	}
@@ -695,6 +713,7 @@ static BSTR XP_GetProductID() {
 #pragma endregion
 
 #pragma region Office 2003
+// ReSharper disable once CppDeclaratorNeverUsed
 static BSTR O2003_VerifyCheckDigits(BSTR cidChunk) {
 	if (!O2003_LoadLicenseManager()) {
 		return SysAllocString(L"An error occurred at O2003_LoadLicenseManager: Failed to load");
@@ -703,11 +722,11 @@ static BSTR O2003_VerifyCheckDigits(BSTR cidChunk) {
 	// TODO: find a way to check office 2003 activation status
 
 	int pbValue;
-	HRESULT status = O2003_LicenseAgent->VerifyCheckDigits(cidChunk, &pbValue);
+	const HRESULT status = O2003_LicenseAgent->VerifyCheckDigits(cidChunk, &pbValue);
 	if (FAILED(status) || !pbValue) {
 
         wchar_t error[] = L"An error occurred at XP_VerifyCheckDigits:";
-        std::wstring numberStr = std::to_wstring(pbValue);
+        const std::wstring numberStr = std::to_wstring(pbValue);
         std::wstring result = error + numberStr;
         wchar_t buffer[100];
 
@@ -725,9 +744,9 @@ static BSTR O2003_SetConfirmationID(BSTR confirmationID) {
 
 	// TODO: find a way to check office 2003 activation status
 
-	int length = SysStringLen(confirmationID);
+	const int length = static_cast<int>(SysStringLen(confirmationID));
 	char* str = new char[length + 1];
-	WideCharToMultiByte(CP_UTF8, 0, confirmationID, length, str, length, NULL, NULL);
+	WideCharToMultiByte(CP_UTF8, 0, confirmationID, length, str, length, nullptr, nullptr);
 	str[length] = '\0';
 
 	std::string inputString(str);
@@ -741,14 +760,14 @@ static BSTR O2003_SetConfirmationID(BSTR confirmationID) {
 	}
 
 	ULONG dwRetCode;
-	HRESULT status = O2003_LicenseAgent->DepositConfirmationId(confirmationID, &dwRetCode);
+	const HRESULT status = O2003_LicenseAgent->DepositConfirmationId(confirmationID, &dwRetCode);
 	if (FAILED(status) || dwRetCode) {
         const char* errorString = "An error occurred at DepositConfirmationId:";
-        int bufferSize = snprintf(nullptr, 0, "%s 0x%08X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
+        const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
         char* result = new char[bufferSize + 1];
         snprintf(result, bufferSize + 1, "%s 0x%08X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
-        int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
-        OLECHAR* wideResult = new OLECHAR[wideCharSize];
+        const int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
+        auto* wideResult = new OLECHAR[wideCharSize];
         MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
         return SysAllocString(wideResult);
 	}
@@ -766,17 +785,17 @@ static BSTR O2003_GetInstallationID() {
  
 	// TODO: find a way to check office 2003 activation status
 
-	BSTR installationID = NULL;
+	BSTR installationID = nullptr;
 	std::cout << "DEBUG: installationID = NULL";
-	HRESULT status = O2003_LicenseAgent->GenerateInstallationId(&installationID);
+	const HRESULT status = O2003_LicenseAgent->GenerateInstallationId(&installationID);
 	std::cout << "DEBUG: GenerateInstallationID executed";
 	if (FAILED(status) || !installationID) {
         const char* errorString = "An error occurred at GenerateInstallationId:";
-        int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
+        const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
         char* result = new char[bufferSize + 1];
         snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
-        int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
-        OLECHAR* wideResult = new OLECHAR[wideCharSize];
+        const int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
+        auto* wideResult = new OLECHAR[wideCharSize];
         MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
         return SysAllocString(wideResult);
 	}
@@ -851,30 +870,29 @@ int main(int argc, char* argv[])
 			else { // is PPC, megafart 386, whatever else
 				std::cout << "An error occurred at systemInfo: Incorrect version of xpmgr. Go to https://umskt.zulipchat.com if you want to help us make a version for your platform!";
 			}
-			return 0;
+			return 1;
 	}
 #endif
-		OSVERSIONINFOEX info;
-		memset(&info, 0, sizeof(OSVERSIONINFOEX));
+		OSVERSIONINFOEX info = {};
 		info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-		GetVersionEx((LPOSVERSIONINFO)&info);
+		GetVersionEx(reinterpret_cast<LPOSVERSIONINFO>(&info));
 
 		if (info.dwMajorVersion != 5) {
 			std::cout << "An error occurred at OSVERSIONINFOEX: Windows management only works on Windows NT 5.1 and 5.2.";
 			if (info.dwMajorVersion > 5) {
-				std::cout << " Use slmgr instead.";
-				return 0;
+				std::cout << " Use slmgr instead: https://learn.microsoft.com/en-us/windows-server/get-started/activation-slmgr-vbs-options";
+				return 3;
 			}
-			return 0;
+			return 2;
 		}
 		else {
 			if (info.dwMinorVersion != 1 && info.dwMinorVersion != 2) {
+				std::cout << "An error occurred at OSVERSIONINFOEX: Windows management only works on Windows NT 5.1 and 5.2.";
 				if (info.dwMinorVersion == 0) {
 					std::cout << " You should be fine anyways, since Windows 2000 doesn't use Product Activation.";
-					return 0;
+					return 4;
 				}
-				std::cout << "An error occurred OSVERSIONINFOEX: Windows management only works on Windows NT 5.1 and 5.2.";
-				return 0;
+				return 5;
 			}
 		}
 	}
@@ -895,11 +913,10 @@ int main(int argc, char* argv[])
 		std::cout << ConvertToStdString(XP_SetConfirmationID(ConvertCharToBSTR(getCmdOption(argv, argv + argc, "--SetConfirmationID"))));
 		return 0;
 	}
-
 	else if (cmdOptionExists(argv, argv + argc, "--GetWPALeft")) {
 		if (std::strcmp(specifiedProduct, "WindowsNT5x") != 0) {
 			std::cout << "An error occurred at specifiedProduct: This command is for Windows management only.";
-			return 0;
+			return 6;
 		}
 		std::cout << ConvertToStdString(XP_GetWPALeft());
 		return 0;
@@ -907,7 +924,7 @@ int main(int argc, char* argv[])
 	else if (cmdOptionExists(argv, argv + argc, "--GetEvalLeft")) {
 		if (std::strcmp(specifiedProduct, "WindowsNT5x") != 0) {
 			std::cout << "An error occurred at specifiedProduct: This command is for Windows management only.";
-			return 0;
+			return 6;
 		}
 		std::cout << ConvertToStdString(XP_GetEvalLeft());
 		return 0;
@@ -916,7 +933,7 @@ int main(int argc, char* argv[])
 	else if (cmdOptionExists(argv, argv + argc, "--SetProductKey")) {
 		if (std::strcmp(specifiedProduct, "WindowsNT5x") != 0) {
 			std::cout << "An error occurred at specifiedProduct: This command is for Windows management only.";
-			return 0;
+			return 6;
 		}
 		std::cout << ConvertToStdString(XP_SetProductKey(convertCharArrayToLPCWSTR(getCmdOption(argv, argv + argc, "--SetProductKey"))));
 		return 0;
@@ -924,7 +941,7 @@ int main(int argc, char* argv[])
 	else if (cmdOptionExists(argv, argv + argc, "--GetProductID")) {
 		if (std::strcmp(specifiedProduct, "WindowsNT5x") != 0) {
 			std::cout << "An error occurred at specifiedProduct: This command is for Windows management only.";
-			return 0;
+			return 6;
 		}
 		std::cout << ConvertToStdString(XP_GetProductID());
 		return 0;
@@ -932,7 +949,7 @@ int main(int argc, char* argv[])
 	else {
 		std::cout << "An error occurred at main: No arguments listed\n\n";
 		std::cout << text;
-		return 0;
+		return 7;
 	}
 }
 #pragma clang diagnostic pop

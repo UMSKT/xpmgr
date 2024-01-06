@@ -6,7 +6,7 @@ Command line interface for Windows XP license management, inspired by Microsoft'
 
 In most cases, you'll need `xpmgr_x86.exe`.
 
-If you have Windows XP Professional x64 Edition or an x64 version of Windows Server 2003, you need `xpmgr_x64.exe`.
+If you have Windows XP Professional x64 Edition or a x64 version of Windows Server 2003, you need `xpmgr_x64.exe`.
 
 If you have an Itanium version of Windows XP or Server 2003, Windows Product Activation is not on those editions, so there is no need for this tool.
 
