@@ -30,24 +30,19 @@ jobs:
           mkdir build\x86
           mkdir build\x64
 
-      - name: Build xpmgr (x86)
+      - name: Build xpmgr
         run: |
-          windres icon.rc -O coff -F pe-i386 -o build\x86\icon_x86.res -v
-          C:\TDM-GCC-64\bin\g++.exe -m32 -o build\x86\xpmgr_x86 xpmgr.cpp build\x86\icon_x86.res -lole32 -luuid -loleaut32 -v
-
-      - name: Build xpmgr (x64)
-        run: |
-          windres icon.rc -O coff -o build\x64\icon_x64.res -v
-          C:\TDM-GCC-64\bin\g++.exe -o build\x64\xpmgr_x64 xpmgr.cpp build\x64\icon_x64.res -lole32 -luuid -loleaut32 -v
+          cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_CXX_COMPILER=C:/TDM-GCC-64/bin/g++.exe
+          cmake --build build --config Debug
 
       - name: Upload build artifact (x86)
         uses: actions/upload-artifact@v3.1.2
         with:
           name: xpmgr (x86)
-          path: .\build\x86
+          path: .\build\xpmgr_x86.exe
           
       - name: Upload build artifact (x64)
         uses: actions/upload-artifact@v3.1.2
         with:
           name: xpmgr (x64)
-          path: .\build\x64
+          path: .\build\xpmgr_x64.exe
