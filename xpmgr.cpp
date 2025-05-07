@@ -531,7 +531,9 @@ static BSTR XP_GetWPALeft() {
 	if (dwWPALeft == 0x7FFFFFFF) {
 		return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
 	}
-	return SysAllocString(_bstr_t(dwWPALeft).Detach());
+    wchar_t buffer[16];
+    swprintf_s(buffer, 16, L"%lu", dwWPALeft);
+	return SysAllocString(buffer);
 }
 
 static BSTR XP_GetEvalLeft() {
@@ -556,7 +558,9 @@ static BSTR XP_GetEvalLeft() {
 	if (dwEvalLeft == 0x7FFFFFFF) {
 		return SysAllocString(L"An error occurred at GetEvalLeft: Not an evaluation copy");
 	}
-	return SysAllocString(_bstr_t(dwEvalLeft).Detach());
+	wchar_t buffer[16];
+	swprintf_s(buffer, 16, L"%lu", dwWPALeft);
+	return SysAllocString(buffer);
 }
 
 static BSTR XP_VerifyCheckDigits(BSTR cidChunk) {
@@ -868,7 +872,7 @@ int main(int argc, char* argv[])
 				std::cout << "An error occurred at systemInfo: Windows Product Activation does not exist on this platform.";
 			}
 			else { // is PPC, megafart 386, whatever else
-				std::cout << "An error occurred at systemInfo: Incorrect version of xpmgr. Go to https://umskt.zulipchat.com if you want to help us make a version for your platform!";
+				std::cout << "An error occurred at systemInfo: Incorrect version of xpmgr. Send an issue at https://github.com/UMSKT/xpmgr/issues if you want to help us make a version for your platform!";
 			}
 			return 1;
 	}
