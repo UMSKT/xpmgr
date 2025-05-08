@@ -532,7 +532,7 @@ static BSTR XP_GetWPALeft() {
 		return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
 	}
     wchar_t buffer[16];
-    swprintf_s(buffer, 16, L"%lu", dwWPALeft);
+    swprintf(buffer, L"%lu", dwWPALeft);
 	return SysAllocString(buffer);
 }
 
@@ -559,7 +559,7 @@ static BSTR XP_GetEvalLeft() {
 		return SysAllocString(L"An error occurred at GetEvalLeft: Not an evaluation copy");
 	}
 	wchar_t buffer[16];
-	swprintf_s(buffer, 16, L"%lu", dwWPALeft);
+	swprintf(buffer, L"%lu", dwWPALeft);
 	return SysAllocString(buffer);
 }
 
