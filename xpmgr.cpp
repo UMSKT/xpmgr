@@ -734,7 +734,7 @@ static BSTR O2003_VerifyCheckDigits(BSTR cidChunk) {
         std::wstring result = error + numberStr;
         wchar_t buffer[100];
 
-        swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"%s 0x%X %d", error, status, pbValue);
+        swprintf(buffer, std::size(buffer), L"%s 0x%X %d", error, status, pbValue);
 
 		return SysAllocString(buffer);
 	}
@@ -835,13 +835,9 @@ int main(int argc, char* argv[])
 	if (cmdOptionExists(argv, argv + argc, "--Office2003")) {
 #ifdef ENVIRONMENT32
 
-        if (cmdOptionExists(argv, argv + argc, "--BypassInstallCheck")) {
-            specifiedProduct = "Office2003";
-        }
-        else if (RegistryKeyExists(HKEY_CLASSES_ROOT, "CLSID\\{000C0114-0000-0000-C000-000000000046}")) {
-			specifiedProduct = "Office2003";
-		}
-		else {
+        if (cmdOptionExists(argv, argv + argc, "--BypassInstallCheck") || RegistryKeyExists(HKEY_CLASSES_ROOT, "CLSID\\{000C0114-0000-0000-C000-000000000046}")) {
+	        specifiedProduct = "Office2003";
+		} else {
 			std::cout << "An error occurred at RegistryKeyExists: Office 2003 isn't detected (specifically, it's COM Module, responsible for activation). Please (re)install Office 2003, since you wouldn't be able to activate via the GUI anyway.";
 			return 0;
 		}
