@@ -10,8 +10,6 @@ If you have Windows XP Professional x64 Edition or a x64 version of Windows Serv
 
 If you have an Itanium version of Windows XP or Server 2003, Windows Product Activation is not on those editions, so there is no need for this tool.
 
-If you're trying to manage products other than Windows, you need `xpmgr_x86.exe`, regardless of your architecture.
-
 `--GetProductID`: Gets the product ID (ex: `76477-755-3803223-21229`).
 
 `--SetProductKey` or `/ipk`: Sets the product key (tested to work with dashes). If already activated, this should give an error instead.
@@ -24,14 +22,18 @@ If you're trying to manage products other than Windows, you need `xpmgr_x86.exe`
 
 `--GetEvalLeft`: Gets the number of days before the evaluation period expires, in days. In non-evaluation copies of Windows, this should give an error instead.
 
-`--Office2003`: This provides **EXPERIMENTAL** support for Office 2003. When this parameter is used, all other parameters except `--GetInstallationID` and `--SetConfirmationID` are disabled, and those two (attempt) to go what they do on Office 2003, rather than Windows.
-
-`--BypassInstallCheck`: Disables the check to see if Office 2003 is installed. Intended for debugging purposes only. If it doesn't work without this enabled, it probably won't work with it either.
-
 `--GetUsage`: Outputs all the commands you can use.
 
 ## Releases
 https://github.com/UMSKT/xpmgr/releases
+
+## Credits
+Icon made by %fillin%, released under Creative Commons CC-BY-SA 4.0. Modified by [TheTank20](https://github.com/thepwrtank18) to differenciate from UMSKT.
+
+## License
+This code is licensed under the LGPLv3 license.
+> [!IMPORTANT]  
+> Versions from May 7th, 2025 and earlier are licensed under the EPL license.
 
 ## Building
 Make sure Visual Studio 2017 or later is installed (recommended, might not be needed). Then, install [TDM-GCC](https://jmeubank.github.io/tdm-gcc/about/). Then, use CMake to build:
