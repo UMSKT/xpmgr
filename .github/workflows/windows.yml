@@ -37,6 +37,7 @@ jobs:
 
       - name: Save TDM-GCC
         uses: actions/cache/save@v4
+        if: steps.cache-gcc.outputs.cache-hit != 'true'
         with:
           path: |
             C:\TDM-GCC-64
