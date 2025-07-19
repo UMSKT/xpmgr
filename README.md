@@ -1,4 +1,6 @@
 # xpmgr
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/UMSKT/xpmgr/windows.yml)
+
 Command line interface for Windows XP license management, inspired by Microsoft's "slmgr".
 
 ## Usage
