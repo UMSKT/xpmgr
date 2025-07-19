@@ -14,6 +14,7 @@ jobs:
         uses: actions/checkout@v4.2.2
 
       - name: Cache TDM-GCC
+        id: cache-gcc
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -21,6 +22,7 @@ jobs:
           key: TDM-GCC-10.3.0
           
       - name: Setup TDM-GCC
+        if: steps.cache-gcc.outputs.cache-hit != 'true'
         run: |
           Write-Host Downloading TDM-GCC v10.3.0...
           Invoke-WebRequest -Uri 'https://github.com/jmeubank/tdm-gcc/releases/download/v10.3.0-tdm64-2/tdm64-gcc-10.3.0-2.exe' -OutFile 'C:\Windows\temp\TDM-GCC-64.exe'
