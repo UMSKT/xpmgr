@@ -11,7 +11,16 @@ jobs:
       - name: Checkout Source Tree
         uses: actions/checkout@v4.2.2
 
+      - name: Cache TDM-GCC
+        id: cache-gcc
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            C:\TDM-GCC-64
+          key: TDM-GCC-10.3.0
+          
       - name: Setup TDM-GCC
+        if: steps.cache-gcc.outputs.cache-hit != 'true'
         run: |
           Write-Host Downloading TDM-GCC v10.3.0...
           Invoke-WebRequest -Uri 'https://github.com/jmeubank/tdm-gcc/releases/download/v10.3.0-tdm64-2/tdm64-gcc-10.3.0-2.exe' -OutFile 'C:\Windows\temp\TDM-GCC-64.exe'
@@ -23,12 +32,20 @@ jobs:
           Start-Process '7z' -ArgumentList 'e C:\TDM-GCC-64\*.tar.xz -oC:\TDM-GCC-64 -y' -Wait
           Write-Host Copying files [Set 3/3]...
           Start-Process '7z' -ArgumentList 'x C:\TDM-GCC-64\*.tar -oC:\TDM-GCC-64 -y' -Wait
-          Write-Host Adding environment variables...
-          $env:PATH = 'C:\TDM-GCC-64\bin;' + $env:PATH
-          [Environment]::SetEnvironmentVariable('PATH', $env:PATH, [EnvironmentVariableTarget]::Machine)
+
+      - name: Save TDM-GCC
+        uses: actions/cache/save@v4
+        if: steps.cache-gcc.outputs.cache-hit != 'true'
+        with:
+          path: |
+            C:\TDM-GCC-64
+          key: TDM-GCC-10.3.0
         
       - name: Setup folder directories
         run: |
+          Write-Host Adding environment variables...
+          $env:PATH = 'C:\TDM-GCC-64\bin;' + $env:PATH
+          [Environment]::SetEnvironmentVariable('PATH', $env:PATH, [EnvironmentVariableTarget]::Machine)
           mkdir build
           mkdir build\x86
           mkdir build\x64
