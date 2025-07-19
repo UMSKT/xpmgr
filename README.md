@@ -34,18 +34,8 @@ If you're trying to manage products other than Windows, you need `xpmgr_x86.exe`
 https://github.com/UMSKT/xpmgr/releases
 
 ## Building
-Make sure Visual Studio 2017 or later is installed. Then, install [TDM-GCC](https://jmeubank.github.io/tdm-gcc/about/). Then, run, at the source folder:
+Make sure Visual Studio 2017 or later is installed (recommended, might not be needed). Then, install [TDM-GCC](https://jmeubank.github.io/tdm-gcc/about/). Then, use CMake to build:
 ```
-mkdir build
-mkdir build\x86
-mkdir build\x64
-windres icon.rc -F pe-i386 -O coff -o build\x86\icon_x86.res
-g++ -m32 -o build\x86\xpmgr_x86 xpmgr.cpp build\x86\icon_x86.res -lole32 -luuid -loleaut32
-windres icon.rc -O coff -o build\x64\icon_x64.res
-g++ -o build\x64\xpmgr_x64 xpmgr.cpp build\x64\icon_x64.res -lole32 -luuid -loleaut32
-```
-
-Or, if you like one-liners:
-```
-mkdir build & mkdir build\x86 & mkdir build\x64 & windres icon.rc -F pe-i386 -O coff -o build\x86\icon_x86.res & g++ -m32 -o build\x86\xpmgr_x86 xpmgr.cpp build\x86\icon_x86.res -lole32 -luuid -loleaut32 & windres icon.rc -O coff -o build\x64\icon_x64.res & g++ -o build\x64\xpmgr_x64 xpmgr.cpp build\x64\icon_x64.res -lole32 -luuid -loleaut32
+cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_CXX_COMPILER=C:/TDM-GCC-64/bin/g++.exe
+cmake --build build --config Debug
 ```
