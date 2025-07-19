@@ -897,7 +897,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	if (cmdOptionExists(argv, argv + argc, "--GetInstallationID")) {
+	if (cmdOptionExists(argv, argv + argc, "--GetInstallationID") || cmdOptionExists(argv, argv + argc, "/dti")) {
 		if (std::strcmp(specifiedProduct, "Office2003") == 0) {
 			std::cout << ConvertToStdString(O2003_GetInstallationID());
 			return 0;
@@ -905,7 +905,7 @@ int main(int argc, char* argv[])
 		std::cout << ConvertToStdString(XP_GetInstallationID());
 		return 0;
 	}
-	else if (cmdOptionExists(argv, argv + argc, "--SetConfirmationID")) {
+	else if (cmdOptionExists(argv, argv + argc, "--SetConfirmationID") || cmdOptionExists(argv, argv + argc, "/atp")) {
 		if (std::strcmp(specifiedProduct, "Office2003") == 0) {
 			std::cout << ConvertToStdString(O2003_SetConfirmationID(ConvertCharToBSTR(getCmdOption(argv, argv + argc, "--SetConfirmationID"))));
 			return 0;
@@ -930,7 +930,7 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	else if (cmdOptionExists(argv, argv + argc, "--SetProductKey")) {
+	else if (cmdOptionExists(argv, argv + argc, "--SetProductKey") || cmdOptionExists(argv, argv + argc, "/ipk")) {
 		if (std::strcmp(specifiedProduct, "WindowsNT5x") != 0) {
 			std::cout << "An error occurred at specifiedProduct: This command is for Windows management only.";
 			return 6;
