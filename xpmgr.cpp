@@ -535,14 +535,13 @@ int main(int argc, char* argv[])
 		"xpmgr - Windows XP License Manager (compiled on " __DATE__ " " __TIME__ ")\n"
 		"\n"
 		"Usage: \n"
-		"--GetInstallationID: Gets the Installation ID\n"
-		"--SetConfirmationID [cid]: Sets Confirmation ID (If successful, activates Windows/Office)\n"
-		"--GetWPALeft: Gets the days before activation is required (Grace period)\n"
-		"--GetEvalLeft: Gets the days before the evaluation period expires (Eval. copies only)\n"
-		"--SetProductKey [pkey]: Sets/changes product key\n"
-		"--GetProductID: Gets the product ID of Windows\n"
-		//"--Office2003: Manages Office 2003 rather than Windows [EXPERIMENTAL] (32-bit xpmgr only)\n"
-		"--GetUsage: Displays this message";
+		"/dti: Gets the Installation ID\n"
+		"/atp [cid]: Sets Confirmation ID (If successful, activates Windows/Office)\n"
+		"/xpr: Gets the days before activation is required (Grace period)\n"
+		"/xpr-eval: Gets the days before the evaluation period expires (Eval. copies only)\n"
+		"/ipk [pkey]: Sets/changes product key\n"
+		"/dli: Gets the product ID of Windows\n"
+		"/?: Displays this message";
 
 	if (cmdOptionExists(argv, argv + argc, "--GetUsage")) {
 		std::cout << text;
@@ -592,28 +591,28 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	if (cmdOptionExists(argv, argv + argc, "--GetInstallationID") || cmdOptionExists(argv, argv + argc, "/dti")) {
+	if (cmdOptionExists(argv, argv + argc, "/dti")) {
 		std::cout << ConvertToStdString(XP_GetInstallationID());
 		return 0;
 	}
-	else if (cmdOptionExists(argv, argv + argc, "--SetConfirmationID") || cmdOptionExists(argv, argv + argc, "/atp")) {
+	else if (cmdOptionExists(argv, argv + argc, "/atp")) {
 		std::cout << ConvertToStdString(XP_SetConfirmationID(ConvertCharToBSTR(getCmdOption(argv, argv + argc, "--SetConfirmationID"))));
 		return 0;
 	}
-	else if (cmdOptionExists(argv, argv + argc, "--GetWPALeft")) {
+	else if (cmdOptionExists(argv, argv + argc, "/xpr")) {
 		std::cout << ConvertToStdString(XP_GetWPALeft());
 		return 0;
 	}
-	else if (cmdOptionExists(argv, argv + argc, "--GetEvalLeft")) {
+	else if (cmdOptionExists(argv, argv + argc, "/xpr-eval")) {
 		std::cout << ConvertToStdString(XP_GetEvalLeft());
 		return 0;
 	}
 
-	else if (cmdOptionExists(argv, argv + argc, "--SetProductKey") || cmdOptionExists(argv, argv + argc, "/ipk")) {
+	else if (cmdOptionExists(argv, argv + argc, "/ipk")) {
 		std::cout << ConvertToStdString(XP_SetProductKey(convertCharArrayToLPCWSTR(getCmdOption(argv, argv + argc, "--SetProductKey"))));
 		return 0;
 	}
-	else if (cmdOptionExists(argv, argv + argc, "--GetProductID")) {
+	else if (cmdOptionExists(argv, argv + argc, "/dli")) {
 		std::cout << ConvertToStdString(XP_GetProductID());
 		return 0;
 	}
