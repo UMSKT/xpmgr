@@ -142,6 +142,19 @@ static BOOL XP_LoadLicenseManager()
 
 #pragma region Internals
 
+// Add function to read from stdin
+std::string readFromStdin() {
+    std::string input;
+    if (!std::cin.eof() && std::getline(std::cin, input)) {
+        // Remove any trailing whitespace, newlines or carriage returns
+        input.erase(std::find_if(input.rbegin(), input.rend(), [](unsigned char ch) {
+            return !std::isspace(ch);
+        }).base(), input.end());
+        return input;
+    }
+    return "";
+}
+
 wchar_t* convertCharArrayToLPCWSTR(const char* charArray)
 {
 	auto* wString = new wchar_t[4096];
@@ -536,10 +549,10 @@ int main(int argc, char* argv[])
 		"\n"
 		"Usage: \n"
 		"/dti: Gets the Installation ID\n"
-		"/atp [cid]: Sets Confirmation ID (If successful, activates Windows/Office)\n"
+		"/atp [cid]: Sets Confirmation ID (If successful, activates Windows/Office) (can also read from stdin)\n"
 		"/xpr: Gets the days before activation is required (Grace period)\n"
 		"/xpr-eval: Gets the days before the evaluation period expires (Eval. copies only)\n"
-		"/ipk [pkey]: Sets/changes product key\n"
+		"/ipk [pkey]: Sets/changes product key (can also read from stdin)\n"
 		"/dli: Gets the product ID of Windows\n"
 		"/?: Displays this message";
 
@@ -596,7 +609,20 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 	else if (cmdOptionExists(argv, argv + argc, "/atp")) {
-		std::cout << ConvertToStdString(XP_SetConfirmationID(ConvertCharToBSTR(getCmdOption(argv, argv + argc, "--SetConfirmationID"))));
+		const char* confirmationId = getCmdOption(argv, argv + argc, "/atp");
+		if (!confirmationId) {
+			// No argument provided, try reading from stdin
+			std::string pipedInput = readFromStdin();
+			if (!pipedInput.empty()) {
+				std::cout << ConvertToStdString(XP_SetConfirmationID(ConvertCharToBSTR(pipedInput.c_str())));
+			} else {
+				std::cout << "An error occurred at main: No confirmation ID provided via argument or pipe\n\n";
+				std::cout << text;
+				return 7;
+			}
+		} else {
+			std::cout << ConvertToStdString(XP_SetConfirmationID(ConvertCharToBSTR(confirmationId)));
+		}
 		return 0;
 	}
 	else if (cmdOptionExists(argv, argv + argc, "/xpr")) {
@@ -609,7 +635,20 @@ int main(int argc, char* argv[])
 	}
 
 	else if (cmdOptionExists(argv, argv + argc, "/ipk")) {
-		std::cout << ConvertToStdString(XP_SetProductKey(convertCharArrayToLPCWSTR(getCmdOption(argv, argv + argc, "--SetProductKey"))));
+		const char* productKey = getCmdOption(argv, argv + argc, "/ipk");
+		if (!productKey) {
+			// No argument provided, try reading from stdin
+			std::string pipedInput = readFromStdin();
+			if (!pipedInput.empty()) {
+				std::cout << ConvertToStdString(XP_SetProductKey(convertCharArrayToLPCWSTR(pipedInput.c_str())));
+			} else {
+				std::cout << "An error occurred at main: No product key provided via argument or pipe\n\n";
+				std::cout << text;
+				return 7;
+			}
+		} else {
+			std::cout << ConvertToStdString(XP_SetProductKey(convertCharArrayToLPCWSTR(productKey)));
+		}
 		return 0;
 	}
 	else if (cmdOptionExists(argv, argv + argc, "/dli")) {
