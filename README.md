@@ -10,19 +10,19 @@ If you have Windows XP Professional x64 Edition or a x64 version of Windows Serv
 
 If you have an Itanium version of Windows XP or Server 2003, Windows Product Activation is not on those editions, so there is no need for this tool.
 
-`--GetProductID`: Gets the product ID (ex: `76477-755-3803223-21229`).
+`/dli`: Gets the product ID (ex: `76477-755-3803223-21229`).
 
-`--SetProductKey` or `/ipk`: Sets the product key (tested to work with dashes). If already activated, this should give an error instead.
+`/ipk`: Sets the product key (tested to work with dashes). If already activated, this should give an error instead.
 
-`--GetInstallationID` or `/dti`: Gets an Installation ID with **no dashes** (ex: `253286028742154311079061239762245184619981623171292574`). If already activated, this should give an error instead.
+`/dti`: Gets an Installation ID with **no dashes** (ex: `253286028742154311079061239762245184619981623171292574`). If already activated, this should give an error instead.
 
-`--SetConfirmationID` or `/atp`: Sets a Confirmation ID (tested to work with dashes). If already activated, this should give an error instead. If successful, this also removes the "Activate Windows" shortcuts and kills the WPA notifier process (`wpabaln.exe`) if it's running.
+`/atp`: Sets a Confirmation ID (tested to work with dashes). If already activated, this should give an error instead. If successful, this also removes the "Activate Windows" shortcuts and kills the WPA notifier process (`wpabaln.exe`) if it's running.
 
-`--GetWPALeft`: Gets the number of days before activation is required, in days. If already activated, this should give an error instead.
+`/xpr`: Gets the number of days before activation is required, in days. If already activated, this should give an error instead.
 
-`--GetEvalLeft`: Gets the number of days before the evaluation period expires, in days. In non-evaluation copies of Windows, this should give an error instead.
+`/xpr-eval`: Gets the number of days before the evaluation period expires, in days. In non-evaluation copies of Windows, this should give an error instead.
 
-`--GetUsage`: Outputs all the commands you can use.
+`/?`: Outputs all the commands you can use.
 
 ## Releases
 https://github.com/UMSKT/xpmgr/releases
