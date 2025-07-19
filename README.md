@@ -30,7 +30,7 @@ If you have an Itanium version of Windows XP or Server 2003, Windows Product Act
 https://github.com/UMSKT/xpmgr/releases
 
 ## Credits
-Icon made by TehAweseomestKitteh, released under Creative Commons CC-BY-SA 4.0. Modified by [TheTank20](https://github.com/thepwrtank18) to differenciate from UMSKT.
+Icon made by TehAweseomestKitteh, released under Creative Commons CC-BY-SA 4.0. Modified by [TheTank20](https://github.com/thepwrtank18) (poorly) to differenciate from UMSKT.
 
 ## License
 This code is licensed under the LGPLv3 license.
