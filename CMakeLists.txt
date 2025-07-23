@@ -5,8 +5,15 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(SOURCES xpmgr.cpp)
+set(LIB_SOURCES xpmgr_lib.cpp)
 
 # ==== x86 build ====
+
+# Static library for x86
+add_library(xpmgr_static_x86 STATIC ${LIB_SOURCES})
+target_compile_options(xpmgr_static_x86 PRIVATE -m32)
+target_link_libraries(xpmgr_static_x86 PRIVATE ole32 oleaut32 uuid)
+
 set(RES_X86 ${CMAKE_BINARY_DIR}/icon_x86.res)
 
 # Create a custom target for the x86 resource compilation
@@ -26,11 +33,17 @@ add_dependencies(xpmgr_x86 xpmgr_x86_res)
 target_compile_options(xpmgr_x86 PRIVATE -m32)
 target_link_options(xpmgr_x86 PRIVATE -m32)
 
-# Link .res file as a resource
-target_link_libraries(xpmgr_x86 PRIVATE ole32 oleaut32 uuid)
+# Link .res file and static library
+target_link_libraries(xpmgr_x86 PRIVATE ole32 oleaut32 uuid xpmgr_static_x86)
 target_link_options(xpmgr_x86 PRIVATE -Wl,--subsystem,console ${RES_X86})
 
 # ==== x64 build ====
+
+# Static library for x64
+add_library(xpmgr_static_x64 STATIC ${LIB_SOURCES})
+target_compile_options(xpmgr_static_x64 PRIVATE -m64)
+target_link_libraries(xpmgr_static_x64 PRIVATE ole32 oleaut32 uuid)
+
 set(RES_X64 ${CMAKE_BINARY_DIR}/icon_x64.res)
 
 # Create a custom target for the x64 resource compilation
@@ -50,6 +63,13 @@ add_dependencies(xpmgr_x64 xpmgr_x64_res)
 target_compile_options(xpmgr_x64 PRIVATE -m64)
 target_link_options(xpmgr_x64 PRIVATE -m64)
 
-# Link .res file as a resource
-target_link_libraries(xpmgr_x64 PRIVATE ole32 oleaut32 uuid)
+# Link .res file and static library
+target_link_libraries(xpmgr_x64 PRIVATE ole32 oleaut32 uuid xpmgr_static_x64)
 target_link_options(xpmgr_x64 PRIVATE -Wl,--subsystem,console ${RES_X64})
+
+# Install targets
+install(TARGETS xpmgr_static_x86 xpmgr_static_x64
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib)
+
+install(FILES xpmgr.h DESTINATION include)

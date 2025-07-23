@@ -28,6 +28,8 @@ If you have an Itanium version of Windows XP or Server 2003, Windows Product Act
 
 `/ipk` and `/dti` also support reading from stdin via a pipe. So, you could do something like `echo FCKGW-RHQQ2-YXRKT-8TG6W-2B7Q8 | xpmgr_x86 /ipk` or `echo 253286028742154311079061239762245184619981623171292574 | xpmgr_x86 /atp` (replace echo with your own program).
 
+This can also be used as a library; see the xpmgr.h file for details.
+
 ## Releases
 https://github.com/UMSKT/xpmgr/releases
 
