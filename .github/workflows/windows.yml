@@ -68,6 +68,8 @@ jobs:
           path: .\build\xpmgr_x64.exe
 
   compress:
+    needs: build
+    if: success()
     runs-on: windows-latest
     steps:
       - name: Cache TDM-GCC
