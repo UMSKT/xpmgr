@@ -132,6 +132,7 @@ jobs:
           strip .\build\x64\xpmgr_x64.exe
 
           # Remove resources
+          New-Item -ItemType Directory -Force -Path .\actions_upload
           llvm-objcopy --remove-section .rsrc .\build\x86\xpmgr_x86.exe .\actions_upload\xpmgr_x86_comp.exe
           llvm-objcopy --remove-section .rsrc .\build\x64\xpmgr_x64.exe .\actions_upload\xpmgr_x64_comp.exe
           
