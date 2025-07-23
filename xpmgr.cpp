@@ -6,6 +6,7 @@ typedef struct IUnknown IUnknown;
 #include <comdef.h>
 #include <regex>
 #include <TlHelp32.h>
+#include <string>
 
 // Check windows
 #if _WIN32 || _WIN64
@@ -15,6 +16,11 @@ typedef struct IUnknown IUnknown;
 #define ENVIRONMENT32
 #endif
 #endif
+
+// Forward declarations of helper functions
+BSTR FormatErrorMessage(const char* context, HRESULT status, ULONG returnCode = 0);
+std::string ConvertToStdString(BSTR bstr);
+BSTR ConvertCharToBSTR(const char* charString);
 
 const char* specifiedProduct = nullptr;
 
@@ -100,44 +106,31 @@ public:
 static BOOL XP_ComInitialized = FALSE;
 static ICOMLicenseAgent* XP_LicenseAgent = nullptr;
 
-static BOOL XP_LoadLicenseManager()
-{
-	if (!XP_ComInitialized) {
-		const HRESULT status = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-		if (FAILED(status)) {
-            const char* errorString = "An error occurred at CoInitializeEx:";
-            const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X\n", errorString, static_cast<unsigned int>(status));
-            char* result = new char[bufferSize + 1];
-            snprintf(result, bufferSize + 1, "%s 0x%08X\n", errorString, static_cast<unsigned int>(status));
-			std::cout << result;
-			return FALSE;
-		}
-		XP_ComInitialized = TRUE;
-	}
-	if (!XP_LicenseAgent) {
-		HRESULT status = CoCreateInstance(XP_CLSID, nullptr, CLSCTX_INPROC_SERVER, XP_IID, reinterpret_cast<void **>(&XP_LicenseAgent));
-		int good = 0;
-		if (SUCCEEDED(status)) {
-			ULONG dwRetCode;
-			status = XP_LicenseAgent->Initialize(0xC475 /* This needs to be changed, I believe it's causing the crashing.*/ , 3, nullptr, &dwRetCode);
-			if (SUCCEEDED(status) && dwRetCode == 0) {
-				good = 1;
-			}
-			else {
-				XP_LicenseAgent->Release();
-				XP_LicenseAgent = nullptr;
-			}
-		}
-		if (!good) {
-            const char* errorString = "An error occurred at CoCreateInstance:";
-            const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X\n", errorString, static_cast<unsigned int>(status));
-            char* result = new char[bufferSize + 1];
-            snprintf(result, bufferSize + 1, "%s 0x%08X\n", errorString, static_cast<unsigned int>(status));
-            std::cout << result;
-			return FALSE;
-		}
-	}
-	return TRUE;
+static BOOL XP_LoadLicenseManager() {
+    if (!XP_ComInitialized) {
+        const HRESULT status = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+        if (FAILED(status)) {
+            std::cout << ConvertToStdString(FormatErrorMessage("CoInitializeEx", status));
+            return FALSE;
+        }
+        XP_ComInitialized = TRUE;
+    }
+
+    if (!XP_LicenseAgent) {
+        HRESULT status = CoCreateInstance(XP_CLSID, nullptr, CLSCTX_INPROC_SERVER, XP_IID, reinterpret_cast<void **>(&XP_LicenseAgent));
+        if (SUCCEEDED(status)) {
+            ULONG dwRetCode;
+            status = XP_LicenseAgent->Initialize(0xC475, 3, nullptr, &dwRetCode);
+            if (SUCCEEDED(status) && dwRetCode == 0) {
+                return TRUE;
+            }
+            XP_LicenseAgent->Release();
+            XP_LicenseAgent = nullptr;
+        }
+        std::cout << ConvertToStdString(FormatErrorMessage("CoCreateInstance", status));
+        return FALSE;
+    }
+    return TRUE;
 }
 
 #pragma region Internals
@@ -205,33 +198,6 @@ OLECHAR SizeToOLECHAR(size_t value)
 	return oChar;
 }
 
-BSTR ConvertToBSTR(const std::string& str) {
-	const int size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, nullptr, 0);
-	// ReSharper disable once CppLocalVariableMayBeConst
-	BSTR bstr = SysAllocStringLen(nullptr, size - 1);
-    MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, bstr, size);
-    return bstr;
-}
-
-std::string ConvertToStdString(BSTR bstr) {
-    const int size = WideCharToMultiByte(CP_UTF8, 0, bstr, -1, nullptr, 0, nullptr, nullptr);
-    const auto buffer = new char[size];
-    WideCharToMultiByte(CP_UTF8, 0, bstr, -1, buffer, size, nullptr, nullptr);
-
-    std::string result(buffer);
-    delete[] buffer;
-
-    return result;
-}
-
-BSTR ConvertCharToBSTR(const char* charString) {
-    const int size = MultiByteToWideChar(CP_UTF8, 0, charString, -1, nullptr, 0);
-    // ReSharper disable once CppLocalVariableMayBeConst
-    BSTR bstr = SysAllocStringLen(nullptr, size - 1);
-    MultiByteToWideChar(CP_UTF8, 0, charString, -1, bstr, size);
-    return bstr;
-}
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 void safeStrncat(char* destination, const char* source, size_t size) {
@@ -248,417 +214,445 @@ void safeStrncat(char* destination, const char* source, size_t size) {
 }
 #pragma clang diagnostic pop
 
-bool IsProcessRunning(const wchar_t* processName)
-{
-	// ReSharper disable once CppLocalVariableMayBeConst
-	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-	if (snapshot == INVALID_HANDLE_VALUE)
-	{
-		std::cout << "An error occurred at IsProcessRunning: Failed to create process snapshot." << std::endl;
-		return false;
-	}
+#pragma region Process Management
 
-	PROCESSENTRY32W processEntry{};
-	processEntry.dwSize = sizeof(PROCESSENTRY32W);
-	if (!Process32FirstW(snapshot, &processEntry))
-	{
-		CloseHandle(snapshot);
-		std::cout << "An error occurred at IsProcessRunning: Failed to retrieve process information." << std::endl;
-		return false;
-	}
+struct ProcessHandle {
+    HANDLE handle;
+    explicit ProcessHandle(HANDLE h) : handle(h) {}
+    ~ProcessHandle() { if (handle != INVALID_HANDLE_VALUE) CloseHandle(handle); }
+    operator HANDLE() const { return handle; }
+};
 
-	while (Process32NextW(snapshot, &processEntry))
-	{
-		if (wcscmp(processEntry.szExeFile, processName) == 0)
-		{
-			CloseHandle(snapshot);
-			return true;  // Process found
-		}
-	}
+bool IsProcessRunning(const wchar_t* processName) {
+    ProcessHandle snapshot(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
+    if (snapshot == INVALID_HANDLE_VALUE) {
+        std::cout << "Failed to create process snapshot: " << GetLastError() << std::endl;
+        return false;
+    }
 
-	CloseHandle(snapshot);
-	return false;  // Process not found
+    PROCESSENTRY32W processEntry{};
+    processEntry.dwSize = sizeof(PROCESSENTRY32W);
+    
+    if (!Process32FirstW(snapshot, &processEntry)) {
+        std::cout << "Failed to retrieve process information: " << GetLastError() << std::endl;
+        return false;
+    }
+
+    do {
+        if (wcscmp(processEntry.szExeFile, processName) == 0) {
+            return true;
+        }
+    } while (Process32NextW(snapshot, &processEntry));
+
+    return false;
 }
 
-bool TerminateProcessByName(const wchar_t* processName)
-{
-	// ReSharper disable once CppLocalVariableMayBeConst
-	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-	if (snapshot == INVALID_HANDLE_VALUE)
-	{
-		return false;
-	}
+bool TerminateProcessByName(const wchar_t* processName) {
+    ProcessHandle snapshot(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
+    if (snapshot == INVALID_HANDLE_VALUE) {
+        std::cout << "Failed to create process snapshot: " << GetLastError() << std::endl;
+        return false;
+    }
 
-	PROCESSENTRY32W processEntry{};
-	processEntry.dwSize = sizeof(PROCESSENTRY32W);
-	if (!Process32FirstW(snapshot, &processEntry))
-	{
-		CloseHandle(snapshot);
-		return false;
-	}
+    PROCESSENTRY32W processEntry{};
+    processEntry.dwSize = sizeof(PROCESSENTRY32W);
+    
+    if (!Process32FirstW(snapshot, &processEntry)) {
+        std::cout << "Failed to retrieve process information: " << GetLastError() << std::endl;
+        return false;
+    }
 
-	while (Process32NextW(snapshot, &processEntry))
-	{
-		if (wcscmp(processEntry.szExeFile, processName) == 0)
-		{
-			// ReSharper disable once CppLocalVariableMayBeConst
-			HANDLE processHandle = OpenProcess(PROCESS_TERMINATE, FALSE, processEntry.th32ProcessID);
-			if (processHandle != nullptr)
-			{
-				if (TerminateProcess(processHandle, 0))
-				{
-					CloseHandle(processHandle);
-					CloseHandle(snapshot);
-					return true;  // Process terminated successfully
-				}
-				else
-				{
-					CloseHandle(processHandle);
-					CloseHandle(snapshot);
-					return false;  // Failed to terminate the process
-				}
-			}
-			else
-			{
-				CloseHandle(snapshot);
-				return false;  // Failed to open process handle
-			}
-		}
-	}
+    do {
+        if (wcscmp(processEntry.szExeFile, processName) == 0) {
+            ProcessHandle processHandle(OpenProcess(PROCESS_TERMINATE, FALSE, processEntry.th32ProcessID));
+            if (processHandle == nullptr) {
+                std::cout << "Failed to open process: " << GetLastError() << std::endl;
+                return false;
+            }
 
-	CloseHandle(snapshot);
-	return false;  // Process not found
+            if (!TerminateProcess(processHandle, 0)) {
+                std::cout << "Failed to terminate process: " << GetLastError() << std::endl;
+                return false;
+            }
+
+            return true;
+        }
+    } while (Process32NextW(snapshot, &processEntry));
+
+    std::cout << "Process not found: " << ConvertToStdString(ConvertCharToBSTR(reinterpret_cast<const char*>(processName))) << std::endl;
+    return false;
 }
 
 #pragma endregion
 
+#pragma region Helper Functions
+
+BSTR ConvertCharToBSTR(const char* charString) {
+    if (!charString) return nullptr;
+    const int size = MultiByteToWideChar(CP_UTF8, 0, charString, -1, nullptr, 0);
+    BSTR bstr = SysAllocStringLen(nullptr, size - 1);
+    MultiByteToWideChar(CP_UTF8, 0, charString, -1, bstr, size);
+    return bstr;
+}
+
+std::string ConvertToStdString(BSTR bstr) {
+    if (!bstr) return "";
+    const int size = WideCharToMultiByte(CP_UTF8, 0, bstr, -1, nullptr, 0, nullptr, nullptr);
+    std::string result(size - 1, '\0');
+    WideCharToMultiByte(CP_UTF8, 0, bstr, -1, &result[0], size, nullptr, nullptr);
+    return result;
+}
+
+BSTR FormatErrorMessage(const char* context, HRESULT status, ULONG returnCode) {
+    std::string errorMsg = "An error occurred at " + std::string(context) + ": ";
+    char statusBuffer[32];
+    snprintf(statusBuffer, sizeof(statusBuffer), "0x%08X", static_cast<unsigned int>(status));
+    errorMsg += statusBuffer;
+    
+    if (returnCode != 0) {
+        char returnCodeBuffer[32];
+        snprintf(returnCodeBuffer, sizeof(returnCodeBuffer), " %lu", returnCode);
+        errorMsg += returnCodeBuffer;
+    }
+
+    return ConvertCharToBSTR(errorMsg.c_str());
+}
+
 #pragma region Windows XP
 static BSTR XP_GetWPALeft() {
-	if (!XP_LoadLicenseManager()) {
-		return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
-	}
+    if (!XP_LoadLicenseManager()) {
+        return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
+    }
 
-	ULONG dwWPALeft = 0, dwEvalLeft = 0;
-	const HRESULT status = XP_LicenseAgent->GetExpirationInfo(&dwWPALeft, &dwEvalLeft);
-	if (FAILED(status)) {
-		XP_LicenseAgent->Release();
-		XP_LicenseAgent = nullptr;
-        const char* errorString = "An error occurred at CoInitializeEx:";
-		const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
-        char* result = new char[bufferSize + 1];
-        snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
-		const int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
-        auto* wideResult = new OLECHAR[wideCharSize];
-        MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
-		return SysAllocString(wideResult);
-	}
-	if (dwWPALeft == 0x7FFFFFFF) {
-		return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
-	}
+    ULONG dwWPALeft = 0, dwEvalLeft = 0;
+    const HRESULT status = XP_LicenseAgent->GetExpirationInfo(&dwWPALeft, &dwEvalLeft);
+    if (FAILED(status)) {
+        XP_LicenseAgent->Release();
+        XP_LicenseAgent = nullptr;
+        return FormatErrorMessage("GetExpirationInfo", status);
+    }
+    if (dwWPALeft == 0x7FFFFFFF) {
+        return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
+    }
     wchar_t buffer[16];
     swprintf(buffer, L"%lu", dwWPALeft);
-	return SysAllocString(buffer);
+    return SysAllocString(buffer);
 }
 
 static BSTR XP_GetEvalLeft() {
-	if (!XP_LoadLicenseManager()) {
-		return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
-	}
+    if (!XP_LoadLicenseManager()) {
+        return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
+    }
 
-	ULONG dwWPALeft = 0, dwEvalLeft = 0;
-	const HRESULT status = XP_LicenseAgent->GetExpirationInfo(&dwWPALeft, &dwEvalLeft);
-	if (FAILED(status)) {
-		XP_LicenseAgent->Release();
-		XP_LicenseAgent = nullptr;
-        const char* errorString = "An error occurred at GetExpirationInfo:";
-		const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
-        char* result = new char[bufferSize + 1];
-        snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
-		const int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
-        auto* wideResult = new OLECHAR[wideCharSize];
-        MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
-        return SysAllocString(wideResult);
-	}
-	if (dwEvalLeft == 0x7FFFFFFF) {
-		return SysAllocString(L"An error occurred at GetEvalLeft: Not an evaluation copy");
-	}
-	wchar_t buffer[16];
-	swprintf(buffer, L"%lu", dwWPALeft);
-	return SysAllocString(buffer);
+    ULONG dwWPALeft = 0, dwEvalLeft = 0;
+    const HRESULT status = XP_LicenseAgent->GetExpirationInfo(&dwWPALeft, &dwEvalLeft);
+    if (FAILED(status)) {
+        XP_LicenseAgent->Release();
+        XP_LicenseAgent = nullptr;
+        return FormatErrorMessage("GetExpirationInfo", status);
+    }
+    if (dwEvalLeft == 0x7FFFFFFF) {
+        return SysAllocString(L"An error occurred at GetEvalLeft: Not an evaluation copy");
+    }
+    wchar_t buffer[16];
+    swprintf(buffer, L"%lu", dwEvalLeft);
+    return SysAllocString(buffer);
+}
+
+#pragma region Windows XP Activation
+
+enum class VerificationResult {
+    Success,
+    InvalidFormat,
+    VerificationFailed,
+    AlreadyActivated,
+    LoadError
+};
+
+static VerificationResult VerifyConfirmationIDChunk(const std::string& chunk) {
+    if (chunk.length() != 6) {
+        return VerificationResult::InvalidFormat;
+    }
+
+    LONG pbValue;
+    const HRESULT status = XP_LicenseAgent->VerifyCheckDigits(ConvertCharToBSTR(chunk.c_str()), &pbValue);
+    return (SUCCEEDED(status) && pbValue) ? VerificationResult::Success : VerificationResult::VerificationFailed;
 }
 
 static BSTR XP_VerifyCheckDigits(BSTR cidChunk) {
-	if (!XP_LoadLicenseManager()) {
-		return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
-	}
+    if (!XP_LoadLicenseManager()) {
+        return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
+    }
 
-	if (0 == wcscmp(XP_GetWPALeft(), L"An error occurred at GetWPALeft: Windows is activated")) {
-		return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
-	}
+    const std::string activationCheck = ConvertToStdString(XP_GetWPALeft());
+    if (activationCheck == "An error occurred at GetWPALeft: Windows is activated") {
+        return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
+    }
 
-	LONG pbValue;
-	const HRESULT status = XP_LicenseAgent->VerifyCheckDigits(cidChunk, &pbValue);
-	if (FAILED(status) || !pbValue) {
-        char errorMessage[70] = "An error occurred at XP_VerifyCheckDigits:";
-        char pbValueChar[20];
-        snprintf(errorMessage, sizeof(errorMessage), "%ld", pbValue);
-        safeStrncat(errorMessage, pbValueChar, sizeof(errorMessage));
-        const int len = MultiByteToWideChar(CP_UTF8, 0, errorMessage, -1, nullptr, 0);
-        auto* oleCharString = new OLECHAR[len];
-        MultiByteToWideChar(CP_UTF8, 0, errorMessage, -1, oleCharString, len);
-		return SysAllocString(oleCharString);
-	}
-	return SysAllocString(L"Successfully verified CID chunk");
+    LONG pbValue;
+    const HRESULT status = XP_LicenseAgent->VerifyCheckDigits(cidChunk, &pbValue);
+    return SUCCEEDED(status) && pbValue 
+        ? SysAllocString(L"Successfully verified CID chunk")
+        : FormatErrorMessage("XP_VerifyCheckDigits", status);
 }
 
 static BSTR XP_SetConfirmationID(BSTR confirmationID) {
-	if (!XP_LoadLicenseManager()) { 
-		return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
-	}
+    if (!XP_LoadLicenseManager()) { 
+        return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
+    }
 
-	if (0 == wcscmp(XP_GetWPALeft(), L"An error occurred at GetWPALeft: Windows is activated")) {
-		return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
-	}
+    const std::string activationCheck = ConvertToStdString(XP_GetWPALeft());
+    if (activationCheck == "An error occurred at GetWPALeft: Windows is activated") {
+        return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
+    }
 
-	const int length = static_cast<int>(SysStringLen(confirmationID));
-	char* str = new char[length + 1];
-	WideCharToMultiByte(CP_UTF8, 0, confirmationID, length, str, length, nullptr, nullptr);
-	str[length] = '\0';
+    // Convert and clean up the confirmation ID
+    std::string cidStr = ConvertToStdString(confirmationID);
+    cidStr.erase(std::remove(cidStr.begin(), cidStr.end(), '-'), cidStr.end());
 
-	std::string inputString(str);
-	inputString.erase(std::remove(inputString.begin(), inputString.end(), '-'), inputString.end()); // remove -'s
-	for (size_t i = 0; i < inputString.length(); i += 6) {
-		std::string substring = inputString.substr(i, 6);
-		const char* cstr = substring.c_str();
-		if (0 != wcscmp(XP_VerifyCheckDigits(ConvertCharToBSTR(cstr)), L"Successfully verified CID chunk")) {
-			return SysAllocString(L"An error occurred at XP_VerifyCheckDigits: Check for misspelling");
-		}
-	}
+    // Verify each 6-character chunk
+    for (size_t i = 0; i < cidStr.length(); i += 6) {
+        const std::string chunk = cidStr.substr(i, 6);
+        const auto result = VerifyConfirmationIDChunk(chunk);
+        
+        switch (result) {
+            case VerificationResult::InvalidFormat:
+                return SysAllocString(L"An error occurred: Invalid confirmation ID format");
+            case VerificationResult::VerificationFailed:
+                return SysAllocString(L"An error occurred: Confirmation ID verification failed");
+            case VerificationResult::Success:
+                continue;
+            default:
+                return SysAllocString(L"An error occurred: Unexpected verification result");
+        }
+    }
 
-	ULONG dwRetCode;
-	const HRESULT status = XP_LicenseAgent->DepositConfirmationId(confirmationID, &dwRetCode);
-	if (FAILED(status) || dwRetCode) {
-        const char* errorString = "An error occurred at DepositConfirmationId:";
-        const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
-        char* result = new char[bufferSize + 1];
-        snprintf(result, bufferSize + 1, "%s 0x%08X %lu", errorString, static_cast<unsigned int>(status), dwRetCode);
+    // Deposit the full confirmation ID
+    ULONG dwRetCode;
+    const HRESULT status = XP_LicenseAgent->DepositConfirmationId(confirmationID, &dwRetCode);
+    if (FAILED(status) || dwRetCode) {
+        return FormatErrorMessage("DepositConfirmationId", status, dwRetCode);
+    }
 
-        const int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
-        auto* wideResult = new OLECHAR[wideCharSize];
-        MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
-        return SysAllocString(wideResult);
-	}
+    // Handle WPA notifier process
+    if (IsProcessRunning(L"wpabaln.exe")) {
+        if (!TerminateProcessByName(L"wpabaln.exe")) {
+            std::cout << "Warning: Failed to terminate WPA notifier process" << std::endl;
+        }
+    }
 
-	system("rundll32 setupapi,InstallHinfSection DEL_OOBE_ACTIVATE 132 syssetup.inf"); // remove activation shortcuts
+    // Clean up activation files
+    HMODULE hMod = LoadLibraryW(L"setupapi.dll");
+    if (hMod) {
+        using InstallHinfSectionFunc = BOOL (WINAPI*)(HWND, HINSTANCE, PCWSTR, INT);
+        if (auto installHinfSection = reinterpret_cast<InstallHinfSectionFunc>(GetProcAddress(hMod, "InstallHinfSectionW"))) {
+            SetLastError(0);
+            const BOOL result = installHinfSection(nullptr, nullptr, L"DEL_OOBE_ACTIVATE 132 syssetup.inf", 132);
+            const DWORD error = GetLastError();
+            
+            if (!result && error != 0 && error != 6) {  // Ignore error 6 (ERROR_INVALID_HANDLE) as it indicates success
+                std::cout << "Warning: Failed to remove activation reminders. Error: " << error << std::endl;
+				std::cout << "You can try to run the following command yourself: " << std::endl;
+				std::cout << "rundll32 setupapi,InstallHinfSection DEL_OOBE_ACTIVATE 132 syssetup.inf" << std::endl;
+            }
+        }
+        FreeLibrary(hMod);
+    }
 
-	if (IsProcessRunning(L"wpabaln.exe")) { // end WPA notifier process if there
-		TerminateProcessByName(L"wpabaln.exe");
-	}
-
-	return SysAllocString(L"Successfully set confirmation ID");
+    return SysAllocString(L"Successfully set confirmation ID");
 }
 
 static BSTR XP_GetInstallationID() {
-	if (!XP_LoadLicenseManager()) {
-		return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
-	}
-	if (0 == wcscmp(XP_GetWPALeft(), L"An error occurred at GetWPALeft: Windows is activated")) {
-		return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
-	}
+    if (!XP_LoadLicenseManager()) {
+        return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
+    }
+    if (0 == wcscmp(XP_GetWPALeft(), L"An error occurred at GetWPALeft: Windows is activated")) {
+        return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
+    }
 
-	BSTR installationID = nullptr;
-	const HRESULT status = XP_LicenseAgent->GenerateInstallationId(&installationID);
-	if (FAILED(status) || !installationID) {
-        const char* errorString = "An error occurred at GenerateInstallationId:";
-        const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
-        char* result = new char[bufferSize + 1];
-        snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
-        const int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
-        auto* wideResult = new OLECHAR[wideCharSize];
-        MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
-        return SysAllocString(wideResult);
-	}
-	else {
-		return installationID;
-	}
+    BSTR installationID = nullptr;
+    const HRESULT status = XP_LicenseAgent->GenerateInstallationId(&installationID);
+    if (FAILED(status) || !installationID) {
+        return FormatErrorMessage("GenerateInstallationId", status);
+    }
+    return installationID;
 }
 
 static BSTR XP_SetProductKey(LPWSTR productKey) {
-	if (!XP_LoadLicenseManager()) {
-		return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
-	}
+    if (!XP_LoadLicenseManager()) {
+        return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
+    }
 
-	std::wstring ws(productKey);
-	const std::string productKeyToRegex = std::string(ws.begin(), ws.end());
-	const std::regex pattern("[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}");
+    if (0 == wcscmp(XP_GetWPALeft(), L"An error occurred at GetWPALeft: Windows is activated")) {
+        return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
+    }
 
-	if (!std::regex_match(productKeyToRegex, pattern)) {
-		return SysAllocString(L"An error occurred at regex_match: Product key is invalid");
-	}
+    // Validate product key format
+    std::wstring ws(productKey);
+    const std::string productKeyToRegex = std::string(ws.begin(), ws.end());
+    const std::regex pattern("[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}");
 
-	if (0 == wcscmp(XP_GetWPALeft(), L"An error occurred at GetWPALeft: Windows is activated")) {
-		return SysAllocString(L"An error occurred at GetWPALeft: Windows is activated");
-	}
+    if (!std::regex_match(productKeyToRegex, pattern)) {
+        return SysAllocString(L"An error occurred at regex_match: Product key is invalid");
+    }
 
-	const HRESULT status = XP_LicenseAgent->SetProductKey(productKey);
-	if (FAILED(status)) {
-        const char* errorString = "An error occurred at SetProductKey:";
-        const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
-        char* result = new char[bufferSize + 1];
-        snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
-        const int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
-        auto* wideResult = new OLECHAR[wideCharSize];
-        MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
-        return SysAllocString(wideResult);
-	}
-	else {
-		return SysAllocString(L"Successfully set product key");
-	}
+    const HRESULT status = XP_LicenseAgent->SetProductKey(productKey);
+    if (FAILED(status)) {
+        return FormatErrorMessage("SetProductKey", status);
+    }
+    return SysAllocString(L"Successfully set product key");
 }
 
 static BSTR XP_GetProductID() {
-	if (!XP_LoadLicenseManager()) {
-		return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
-	}
+    if (!XP_LoadLicenseManager()) {
+        return SysAllocString(L"An error occurred at XP_LoadLicenseManager: Failed to load");
+    }
 
-	BSTR productID = nullptr;
-
-	const HRESULT status = XP_LicenseAgent->GetProductID(&productID);
-	if (FAILED(status)) {
-        const char* errorString = "An error occurred at GetProductID:";
-        const int bufferSize = snprintf(nullptr, 0, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
-        char* result = new char[bufferSize + 1];
-        snprintf(result, bufferSize + 1, "%s 0x%08X", errorString, static_cast<unsigned int>(status));
-        const int wideCharSize = MultiByteToWideChar(CP_UTF8, 0, result, -1, nullptr, 0);
-        auto* wideResult = new OLECHAR[wideCharSize];
-        MultiByteToWideChar(CP_UTF8, 0, result, -1, wideResult, wideCharSize);
-        return SysAllocString(wideResult);
-	}
-	else {
-		return productID;
-	}
+    BSTR productID = nullptr;
+    const HRESULT status = XP_LicenseAgent->GetProductID(&productID);
+    if (FAILED(status)) {
+        return FormatErrorMessage("GetProductID", status);
+    }
+    return productID;
 }
+#pragma endregion
+
+#pragma region Command Line Handling
+
+struct CommandLineArgs {
+    static const char* getCmdOption(char** begin, char** end, const std::string& option) {
+        char** itr = std::find(begin, end, option);
+        if (itr != end && ++itr != end) {
+            return *itr;
+        }
+        return nullptr;
+    }
+
+    static bool cmdOptionExists(char** begin, char** end, const std::string& option) {
+        return std::find(begin, end, option) != end;
+    }
+
+    static std::string readFromStdin() {
+        std::string input;
+        if (!std::cin.eof() && std::getline(std::cin, input)) {
+            input.erase(std::find_if(input.rbegin(), input.rend(), [](unsigned char ch) {
+                return !std::isspace(ch);
+            }).base(), input.end());
+            return input;
+        }
+        return "";
+    }
+};
+
 #pragma endregion
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-int main(int argc, char* argv[])
-{
-	const char* text =
-		"xpmgr - Windows XP License Manager (compiled on " __DATE__ " " __TIME__ ")\n"
-		"\n"
-		"Usage: \n"
-		"/dti: Gets the Installation ID\n"
-		"/atp [cid]: Sets Confirmation ID (If successful, activates Windows/Office) (can also read from stdin)\n"
-		"/xpr: Gets the days before activation is required (Grace period)\n"
-		"/xpr-eval: Gets the days before the evaluation period expires (Eval. copies only)\n"
-		"/ipk [pkey]: Sets/changes product key (can also read from stdin)\n"
-		"/dli: Gets the product ID of Windows\n"
-		"/?: Displays this message";
+int main(int argc, char* argv[]) {
+    const char* USAGE_TEXT =
+        "xpmgr - Windows XP License Manager (compiled on " __DATE__ " " __TIME__ ")\n"
+        "\n"
+        "Usage: \n"
+        "/dti: Gets the Installation ID\n"
+        "/atp [cid]: Sets Confirmation ID (If successful, activates Windows/Office) (can also read from stdin)\n"
+        "/xpr: Gets the days before activation is required (Grace period)\n"
+        "/xpr-eval: Gets the days before the evaluation period expires (Eval. copies only)\n"
+        "/ipk [pkey]: Sets/changes product key (can also read from stdin)\n"
+        "/dli: Gets the product ID of Windows\n"
+        "/?: Displays this message";
 
-	if (cmdOptionExists(argv, argv + argc, "--GetUsage")) {
-		std::cout << text;
-		return 0;
-	}
+    if (CommandLineArgs::cmdOptionExists(argv, argv + argc, "--GetUsage")) {
+        std::cout << USAGE_TEXT;
+        return 0;
+    }
 
-	specifiedProduct = "WindowsNT5x";
+    // Check Windows version
+    OSVERSIONINFOEX info = {};
+    info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+    GetVersionEx(reinterpret_cast<LPOSVERSIONINFO>(&info));
 
-	if (std::strcmp(specifiedProduct, "WindowsNT5x") == 0) {
-		SYSTEM_INFO systemInfo;
-		GetNativeSystemInfo(&systemInfo);
+    if (info.dwMajorVersion != 5) {
+        std::cout << "An error occurred: Windows management only works on Windows NT 5.1 and 5.2.";
+        if (info.dwMajorVersion > 5) {
+            std::cout << " Use slmgr instead: https://learn.microsoft.com/en-us/windows-server/get-started/activation-slmgr-vbs-options";
+            return 3;
+        }
+        return 2;
+    }
+
+    if (info.dwMinorVersion != 1 && info.dwMinorVersion != 2) {
+        std::cout << "An error occurred: Windows management only works on Windows NT 5.1 and 5.2.";
+        if (info.dwMinorVersion == 0) {
+            std::cout << " You should be fine anyways, since Windows 2000 doesn't use Product Activation.";
+            return 4;
+        }
+        return 5;
+    }
+
+    // Check architecture
 #ifdef ENVIRONMENT32
-		if (systemInfo.wProcessorArchitecture != PROCESSOR_ARCHITECTURE_INTEL) { // running under WOW64
-			if (systemInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) { // is AMD64
-				std::cout << "An error occurred at systemInfo: Incorrect version of xpmgr. You need to download the x64 version.";
-		}
-			else if (systemInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64) { // is IA64
-				std::cout << "An error occurred at systemInfo: Windows Product Activation does not exist on this platform.";
-			}
-			else { // is PPC, megafart 386, whatever else
-				std::cout << "An error occurred at systemInfo: Incorrect version of xpmgr. Send an issue at https://github.com/UMSKT/xpmgr/issues if you want to help us make a version for your platform!";
-			}
-			return 1;
-	}
+    SYSTEM_INFO systemInfo;
+    GetNativeSystemInfo(&systemInfo);
+    if (systemInfo.wProcessorArchitecture != PROCESSOR_ARCHITECTURE_INTEL) {
+        if (systemInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) {
+            std::cout << "An error occurred: Incorrect version of xpmgr. You need to download the x64 version.";
+            return 1;
+        }
+        if (systemInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64) {
+            std::cout << "An error occurred: Windows Product Activation does not exist on this platform.";
+            return 1;
+        }
+        std::cout << "An error occurred: Incorrect version of xpmgr. Send an issue at https://github.com/UMSKT/xpmgr/issues if you want to help us make a version for your platform!";
+        return 1;
+    }
 #endif
-		OSVERSIONINFOEX info = {};
-		info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-		GetVersionEx(reinterpret_cast<LPOSVERSIONINFO>(&info));
 
-		if (info.dwMajorVersion != 5) {
-			std::cout << "An error occurred at OSVERSIONINFOEX: Windows management only works on Windows NT 5.1 and 5.2.";
-			if (info.dwMajorVersion > 5) {
-				std::cout << " Use slmgr instead: https://learn.microsoft.com/en-us/windows-server/get-started/activation-slmgr-vbs-options";
-				return 3;
-			}
-			return 2;
-		}
-		else {
-			if (info.dwMinorVersion != 1 && info.dwMinorVersion != 2) {
-				std::cout << "An error occurred at OSVERSIONINFOEX: Windows management only works on Windows NT 5.1 and 5.2.";
-				if (info.dwMinorVersion == 0) {
-					std::cout << " You should be fine anyways, since Windows 2000 doesn't use Product Activation.";
-					return 4;
-				}
-				return 5;
-			}
-		}
-	}
+    // Handle commands
+    if (CommandLineArgs::cmdOptionExists(argv, argv + argc, "/dti")) {
+        std::cout << ConvertToStdString(XP_GetInstallationID());
+    }
+    else if (CommandLineArgs::cmdOptionExists(argv, argv + argc, "/atp")) {
+        const char* confirmationId = CommandLineArgs::getCmdOption(argv, argv + argc, "/atp");
+        if (!confirmationId) {
+            std::string pipedInput = CommandLineArgs::readFromStdin();
+            if (!pipedInput.empty()) {
+                std::cout << ConvertToStdString(XP_SetConfirmationID(ConvertCharToBSTR(pipedInput.c_str())));
+            } else {
+                std::cout << "An error occurred: No confirmation ID provided via argument or pipe\n\n" << USAGE_TEXT;
+                return 7;
+            }
+        } else {
+            std::cout << ConvertToStdString(XP_SetConfirmationID(ConvertCharToBSTR(confirmationId)));
+        }
+    }
+    else if (CommandLineArgs::cmdOptionExists(argv, argv + argc, "/xpr")) {
+        std::cout << ConvertToStdString(XP_GetWPALeft());
+    }
+    else if (CommandLineArgs::cmdOptionExists(argv, argv + argc, "/xpr-eval")) {
+        std::cout << ConvertToStdString(XP_GetEvalLeft());
+    }
+    else if (CommandLineArgs::cmdOptionExists(argv, argv + argc, "/ipk")) {
+        const char* productKey = CommandLineArgs::getCmdOption(argv, argv + argc, "/ipk");
+        if (!productKey) {
+            std::string pipedInput = CommandLineArgs::readFromStdin();
+            if (!pipedInput.empty()) {
+                std::cout << ConvertToStdString(XP_SetProductKey(convertCharArrayToLPCWSTR(pipedInput.c_str())));
+            } else {
+                std::cout << "An error occurred: No product key provided via argument or pipe\n\n" << USAGE_TEXT;
+                return 7;
+            }
+        } else {
+            std::cout << ConvertToStdString(XP_SetProductKey(convertCharArrayToLPCWSTR(productKey)));
+        }
+    }
+    else if (CommandLineArgs::cmdOptionExists(argv, argv + argc, "/dli")) {
+        std::cout << ConvertToStdString(XP_GetProductID());
+    }
+    else {
+        std::cout << "An error occurred: No arguments listed\n\n" << USAGE_TEXT;
+        return 7;
+    }
 
-	if (cmdOptionExists(argv, argv + argc, "/dti")) {
-		std::cout << ConvertToStdString(XP_GetInstallationID());
-		return 0;
-	}
-	else if (cmdOptionExists(argv, argv + argc, "/atp")) {
-		const char* confirmationId = getCmdOption(argv, argv + argc, "/atp");
-		if (!confirmationId) {
-			// No argument provided, try reading from stdin
-			std::string pipedInput = readFromStdin();
-			if (!pipedInput.empty()) {
-				std::cout << ConvertToStdString(XP_SetConfirmationID(ConvertCharToBSTR(pipedInput.c_str())));
-			} else {
-				std::cout << "An error occurred at main: No confirmation ID provided via argument or pipe\n\n";
-				std::cout << text;
-				return 7;
-			}
-		} else {
-			std::cout << ConvertToStdString(XP_SetConfirmationID(ConvertCharToBSTR(confirmationId)));
-		}
-		return 0;
-	}
-	else if (cmdOptionExists(argv, argv + argc, "/xpr")) {
-		std::cout << ConvertToStdString(XP_GetWPALeft());
-		return 0;
-	}
-	else if (cmdOptionExists(argv, argv + argc, "/xpr-eval")) {
-		std::cout << ConvertToStdString(XP_GetEvalLeft());
-		return 0;
-	}
-
-	else if (cmdOptionExists(argv, argv + argc, "/ipk")) {
-		const char* productKey = getCmdOption(argv, argv + argc, "/ipk");
-		if (!productKey) {
-			// No argument provided, try reading from stdin
-			std::string pipedInput = readFromStdin();
-			if (!pipedInput.empty()) {
-				std::cout << ConvertToStdString(XP_SetProductKey(convertCharArrayToLPCWSTR(pipedInput.c_str())));
-			} else {
-				std::cout << "An error occurred at main: No product key provided via argument or pipe\n\n";
-				std::cout << text;
-				return 7;
-			}
-		} else {
-			std::cout << ConvertToStdString(XP_SetProductKey(convertCharArrayToLPCWSTR(productKey)));
-		}
-		return 0;
-	}
-	else if (cmdOptionExists(argv, argv + argc, "/dli")) {
-		std::cout << ConvertToStdString(XP_GetProductID());
-		return 0;
-	}
-	else {
-		std::cout << "An error occurred at main: No arguments listed\n\n";
-		std::cout << text;
-		return 7;
-	}
+    return 0;
 }
 #pragma clang diagnostic pop
