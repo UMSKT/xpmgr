@@ -2,11 +2,8 @@
 #include <windows.h>
 #include <objbase.h>
 #include <oleauto.h>
-#include <regex>
-#include <string>
-#include <algorithm>
 #include <TlHelp32.h>
-#include <iostream>
+#include "xpmgr_util.h"
 
 // CLSID and IID definitions
 static CLSID XP_CLSID = { 0xACADF079, 0xCBCD, 0x4032, {0x83, 0xF2, 0xFA, 0x47, 0xC4, 0xDB, 0x09, 0x6F} };
@@ -92,7 +89,68 @@ static wchar_t LastErrorMessage[1024] = L"";
 
 // Helper functions
 static void SetLastErrorMessage(const wchar_t* message) {
-    wcscpy(LastErrorMessage, message);
+    lstrcpynW(LastErrorMessage, message, 1024);
+}
+
+static unsigned wide_length(const wchar_t* text) {
+    unsigned length = 0;
+    if (!text) {
+        return 0;
+    }
+    while (text[length]) {
+        length++;
+    }
+    return length;
+}
+
+static void write_ulong_wide(unsigned long value, wchar_t* out) {
+    wchar_t digits[16];
+    int count = 0;
+    int index = 0;
+    if (value == 0) {
+        out[0] = L'0';
+        out[1] = 0;
+        return;
+    }
+    while (value && count < 16) {
+        digits[count++] = (wchar_t)(L'0' + (value % 10));
+        value /= 10;
+    }
+    while (count > 0) {
+        out[index++] = digits[--count];
+    }
+    out[index] = 0;
+}
+
+static int product_key_char(wchar_t ch) {
+    const wchar_t* alphabet = L"2346789BCDFGHJKMPQRTVWXY";
+    for (int index = 0; alphabet[index]; index++) {
+        if (alphabet[index] == ch) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int product_key_ok(const wchar_t* key) {
+    if (!key) {
+        return 0;
+    }
+    for (int group = 0; group < 5; group++) {
+        if (group) {
+            if (*key != L'-') {
+                return 0;
+            }
+            key++;
+        }
+        for (int index = 0; index < 5; index++) {
+            if (!product_key_char(*key)) {
+                return 0;
+            }
+            key++;
+        }
+    }
+    return *key == 0;
 }
 
 static BOOL XP_LoadLicenseManager() {
@@ -134,67 +192,125 @@ static bool VerifyConfirmationIDChunk(ICOMLicenseAgent* agent, const wchar_t* ch
 struct ProcessHandle {
     HANDLE handle;
     explicit ProcessHandle(HANDLE h) : handle(h) {}
-    ~ProcessHandle() { if (handle != INVALID_HANDLE_VALUE) CloseHandle(handle); }
+    ~ProcessHandle() {
+        if (handle && handle != INVALID_HANDLE_VALUE) {
+            CloseHandle(handle);
+        }
+    }
     operator HANDLE() const { return handle; }
 };
 
-bool IsProcessRunning(const wchar_t* processName) {
-    ProcessHandle snapshot(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
-    if (snapshot == INVALID_HANDLE_VALUE) {
-        std::cout << "Failed to create process snapshot: " << GetLastError() << std::endl;
+typedef HANDLE (WINAPI *CreateToolhelp32SnapshotFn)(DWORD flags, DWORD processId);
+typedef BOOL (WINAPI *Process32Fn)(HANDLE snapshot, LPPROCESSENTRY32 entry);
+
+struct Toolhelp {
+    HANDLE snapshot;
+    Process32Fn first;
+    Process32Fn next;
+};
+
+/* NT 4 has no ToolHelp in kernel32. Windows 98 has the ANSI exports.
+   Resolve them here so neither host gets a static import. Missing exports skip cleanup. */
+static int open_process_snapshot(Toolhelp* toolhelp) {
+    HMODULE kernel = GetModuleHandleA("kernel32.dll");
+    CreateToolhelp32SnapshotFn createSnapshot;
+    if (!kernel) {
+        return 0;
+    }
+    createSnapshot = (CreateToolhelp32SnapshotFn)GetProcAddress(kernel, "CreateToolhelp32Snapshot");
+    toolhelp->first = (Process32Fn)GetProcAddress(kernel, "Process32First");
+    toolhelp->next = (Process32Fn)GetProcAddress(kernel, "Process32Next");
+    if (!createSnapshot || !toolhelp->first || !toolhelp->next) {
+        return 0;
+    }
+    toolhelp->snapshot = createSnapshot(TH32CS_SNAPPROCESS, 0);
+    if (toolhelp->snapshot == INVALID_HANDLE_VALUE) {
+        return -1;
+    }
+    return 1;
+}
+
+static bool IsProcessRunning(const char* processName) {
+    Toolhelp toolhelp;
+    int opened = open_process_snapshot(&toolhelp);
+    if (opened == 0) {
+        return false;
+    }
+    if (opened < 0) {
+        xpmgr_write("Failed to create process snapshot: ");
+        xpmgr_write_uint(GetLastError());
+        xpmgr_write("\n");
         return false;
     }
 
-    PROCESSENTRY32W processEntry{};
-    processEntry.dwSize = sizeof(PROCESSENTRY32W);
-    
-    if (!Process32FirstW(snapshot, &processEntry)) {
-        std::cout << "Failed to retrieve process information: " << GetLastError() << std::endl;
+    ProcessHandle snapshot(toolhelp.snapshot);
+    PROCESSENTRY32 processEntry{};
+    processEntry.dwSize = sizeof(PROCESSENTRY32);
+
+    if (!toolhelp.first(snapshot, &processEntry)) {
+        xpmgr_write("Failed to retrieve process information: ");
+        xpmgr_write_uint(GetLastError());
+        xpmgr_write("\n");
         return false;
     }
 
     do {
-        if (wcscmp(processEntry.szExeFile, processName) == 0) {
+        if (lstrcmpiA(processEntry.szExeFile, processName) == 0) {
             return true;
         }
-    } while (Process32NextW(snapshot, &processEntry));
+    } while (toolhelp.next(snapshot, &processEntry));
 
     return false;
 }
 
-bool TerminateProcessByName(const wchar_t* processName) {
-    ProcessHandle snapshot(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
-    if (snapshot == INVALID_HANDLE_VALUE) {
-        std::cout << "Failed to create process snapshot: " << GetLastError() << std::endl;
+static bool TerminateProcessByName(const char* processName) {
+    Toolhelp toolhelp;
+    int opened = open_process_snapshot(&toolhelp);
+    if (opened == 0) {
+        return false;
+    }
+    if (opened < 0) {
+        xpmgr_write("Failed to create process snapshot: ");
+        xpmgr_write_uint(GetLastError());
+        xpmgr_write("\n");
         return false;
     }
 
-    PROCESSENTRY32W processEntry{};
-    processEntry.dwSize = sizeof(PROCESSENTRY32W);
-    
-    if (!Process32FirstW(snapshot, &processEntry)) {
-        std::cout << "Failed to retrieve process information: " << GetLastError() << std::endl;
+    ProcessHandle snapshot(toolhelp.snapshot);
+    PROCESSENTRY32 processEntry{};
+    processEntry.dwSize = sizeof(PROCESSENTRY32);
+
+    if (!toolhelp.first(snapshot, &processEntry)) {
+        xpmgr_write("Failed to retrieve process information: ");
+        xpmgr_write_uint(GetLastError());
+        xpmgr_write("\n");
         return false;
     }
 
     do {
-        if (wcscmp(processEntry.szExeFile, processName) == 0) {
+        if (lstrcmpiA(processEntry.szExeFile, processName) == 0) {
             ProcessHandle processHandle(OpenProcess(PROCESS_TERMINATE, FALSE, processEntry.th32ProcessID));
             if (processHandle == nullptr) {
-                std::cout << "Failed to open process: " << GetLastError() << std::endl;
+                xpmgr_write("Failed to open process: ");
+                xpmgr_write_uint(GetLastError());
+                xpmgr_write("\n");
                 return false;
             }
 
             if (!TerminateProcess(processHandle, 0)) {
-                std::cout << "Failed to terminate process: " << GetLastError() << std::endl;
+                xpmgr_write("Failed to terminate process: ");
+                xpmgr_write_uint(GetLastError());
+                xpmgr_write("\n");
                 return false;
             }
 
             return true;
         }
-    } while (Process32NextW(snapshot, &processEntry));
+    } while (toolhelp.next(snapshot, &processEntry));
 
-    std::cout << "Process not found: " << processName << std::endl;
+    xpmgr_write("Process not found: ");
+    xpmgr_write(processName);
+    xpmgr_write("\n");
     return false;
 }
 
@@ -233,7 +349,7 @@ const wchar_t* XPMGR_GetInstallationID() {
     }
     
     static wchar_t result[256];
-    wcscpy(result, installationID);
+    lstrcpynW(result, installationID, 256);
     SysFreeString(installationID);
     return result;
 }
@@ -243,11 +359,16 @@ const wchar_t* XPMGR_SetConfirmationID(const wchar_t* confirmationId) {
         return XPMGR_GetLastError();
     }
 
+    if (!confirmationId) {
+        SetLastErrorMessage(L"Invalid confirmation ID - verification failed");
+        return XPMGR_GetLastError();
+    }
+
     // Create a working copy and remove dashes
-    wchar_t cleanCid[256] = {0};
+    wchar_t cleanCid[256];
     const wchar_t* src = confirmationId;
     wchar_t* dst = cleanCid;
-    while (*src) {
+    while (*src && (dst - cleanCid) < 255) {
         if (*src != L'-') {
             *dst++ = *src;
         }
@@ -256,10 +377,15 @@ const wchar_t* XPMGR_SetConfirmationID(const wchar_t* confirmationId) {
     *dst = 0;
 
     // Verify each 6-character chunk
-    size_t len = wcslen(cleanCid);
-    for (size_t i = 0; i < len; i += 6) {
-        wchar_t chunk[7] = {0};
-        wcsncpy(chunk, cleanCid + i, 6);
+    unsigned len = wide_length(cleanCid);
+    for (unsigned i = 0; i < len; i += 6) {
+        wchar_t chunk[7];
+        unsigned count = 0;
+        while (count < 6 && cleanCid[i + count]) {
+            chunk[count] = cleanCid[i + count];
+            count++;
+        }
+        chunk[count] = 0;
         if (!VerifyConfirmationIDChunk(XP_LicenseAgent, chunk)) {
             SetLastErrorMessage(L"Invalid confirmation ID - verification failed");
             return XPMGR_GetLastError();
@@ -278,14 +404,14 @@ const wchar_t* XPMGR_SetConfirmationID(const wchar_t* confirmationId) {
     }
 
     // Handle WPA notifier process
-    if (IsProcessRunning(L"wpabaln.exe")) {
-        if (!TerminateProcessByName(L"wpabaln.exe")) {
-            std::cout << "Warning: Failed to terminate WPA notifier process." << std::endl;
+    if (IsProcessRunning("wpabaln.exe")) {
+        if (!TerminateProcessByName("wpabaln.exe")) {
+            xpmgr_write("Warning: Failed to terminate WPA notifier process.\n");
         }
     }
 
     // Clean up activation files
-    HMODULE hMod = LoadLibraryW(L"setupapi.dll");
+    HMODULE hMod = LoadLibraryA("setupapi.dll");
     if (hMod) {
         using InstallHinfSectionFunc = BOOL (WINAPI*)(HWND, HINSTANCE, PCWSTR, INT);
         if (auto installHinfSection = reinterpret_cast<InstallHinfSectionFunc>(GetProcAddress(hMod, "InstallHinfSectionW"))) {
@@ -294,9 +420,11 @@ const wchar_t* XPMGR_SetConfirmationID(const wchar_t* confirmationId) {
             const DWORD error = GetLastError();
             
             if (!result && error != 0 && error != 6) {  // Ignore error 6 (ERROR_INVALID_HANDLE) as it indicates success
-                std::cout << "Warning: Failed to remove activation reminders. Error: " << error << std::endl;
-                std::cout << "You can try to run the following command yourself: " << std::endl;
-                std::cout << "rundll32 setupapi,InstallHinfSection DEL_OOBE_ACTIVATE 132 syssetup.inf" << std::endl;
+                xpmgr_write("Warning: Failed to remove activation reminders. Error: ");
+                xpmgr_write_uint(error);
+                xpmgr_write("\n");
+                xpmgr_write("You can try to run the following command yourself: \n");
+                xpmgr_write("rundll32 setupapi,InstallHinfSection DEL_OOBE_ACTIVATE 132 syssetup.inf\n");
             }
         }
         FreeLibrary(hMod);
@@ -322,7 +450,7 @@ const wchar_t* XPMGR_GetWPALeft() {
     }
 
     static wchar_t result[16];
-    _ultow(dwWPALeft, result, 10);
+    write_ulong_wide(dwWPALeft, result);
     return result;
 }
 
@@ -343,7 +471,7 @@ const wchar_t* XPMGR_GetEvalLeft() {
     }
 
     static wchar_t result[16];
-    _ultow(dwEvalLeft, result, 10);
+    write_ulong_wide(dwEvalLeft, result);
     return result;
 }
 
@@ -352,9 +480,7 @@ const wchar_t* XPMGR_SetProductKey(const wchar_t* productKey) {
         return XPMGR_GetLastError();
     }
 
-    // Validate product key format
-    std::wregex pattern(L"[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}-[2346789BCDFGHJKMPQRTVWXY]{5}");
-    if (!std::regex_match(productKey, pattern)) {
+    if (!product_key_ok(productKey)) {
         SetLastErrorMessage(L"Invalid product key format");
         return XPMGR_GetLastError();
     }
@@ -381,7 +507,7 @@ const wchar_t* XPMGR_GetProductID() {
     }
 
     static wchar_t result[256];
-    wcscpy(result, productID);
+    lstrcpynW(result, productID, 256);
     SysFreeString(productID);
     return result;
 }
